@@ -1,40 +1,26 @@
 window.procesadoresConfig = {
   CBCO: {
-    visible: ['prefix', 'max', 'min', 'order'],
-    fixed: { prefix: 'CBCO', max: 10000000000.0, min: 1.0, order: 1 },
-    internal: ['carrier'] // se asigna automáticamente como "CBCO"
-  },
-  RB: {
-    visible: ['prefix', 'max', 'min', 'order'],
-    fixed: { prefix: 'RB', max: 1000000000000.0, min: 1.0, order: 1 },
-    internal: ['carrier']
+    carrier: 67,
+    campos: {
+      cb_acquirer_id: { tipo: 'texto' },
+      cb_commerce_id: { tipo: 'texto' },
+      cb_terminal_code: { tipo: 'texto' },
+      cb_unique_code: { tipo: 'texto' },
+      cb_using: { tipo: 'booleano' },
+      cb_v2: { tipo: 'booleano' }
+    }
   },
   PSE: {
-    visible: [
-      'commerce_id', 'terminal_id', 'ciiu',
-      'beneficiaryEntityName', 'beneficiaryEntityCIIUCategory',
-      'beneficiaryEntityIdentification', 'beneficiaryEntityIdentificationType'
-    ],
-    fixed: {
-      carrier: 'PSE',
-      country_default: 'COL',
-      currency_default: 'COP',
-      max_amount: 1000000000,
-      min_amount: 1,
-      is_v2: true
-    },
-    internal: []
-  },
-  ccapi: {
-    visible: [],
-    fixed: {
-      carrier: 'ccapi',
-      country_default: 'COL',
-      currency_default: 'COP',
-      agreement: {},
-      max_amount: 1000000000,
-      min_amount: 1
-    },
-    internal: []
+    carrier: 100,
+    campos: {
+      commerce_id: { tipo: 'texto' },
+      terminal_id: { tipo: 'texto' },
+      nombre_beneficiario: { tipo: 'texto' },
+      tipo_documento: { tipo: 'texto' },
+      numero_documento: { tipo: 'texto' },
+      cuenta_bancaria: { tipo: 'texto' },
+      tipo_cuenta: { tipo: 'texto' },
+      banco: { tipo: 'texto' }
+    }
   }
 };
