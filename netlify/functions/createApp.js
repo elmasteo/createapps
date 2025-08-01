@@ -50,13 +50,13 @@ exports.handler = async (event) => {
     for (const integrationCode of integrations) {
   for (const proc of procesadores) {
     const carrier = proc.carrier;
-    const carriers = procesadores.map(p => ({
-      carrier: p.carrier,
-      prefix: p.tipo,
+    const carriers = [{
+      carrier: proc.carrier,
+      prefix: proc.tipo,
       max: 1000.0,
       min: 1.0,
       order: 1
-    }));
+    }];
 
     const appPayload = {
       name,
@@ -68,13 +68,7 @@ exports.handler = async (event) => {
       currency,
       carrier,
       carriers,
-      procesadores: [
-        {
-          tipo: proc.tipo,
-          carrier: proc.carrier,
-          campos: proc.campos
-        }
-      ]
+      ...proc.campos // <-- ¡esto es lo importante!
     };
 
     console.log('Enviando a CCAPI:', JSON.stringify(appPayload, null, 2));
