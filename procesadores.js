@@ -40,6 +40,9 @@ window.procesadoresConfig = {
       pr_merchant_type: { tipo: 'texto' },
       pr_acceptor_name: { tipo: 'texto' },
       pr_using: { tipo: 'booleano' }
+    },
+    fijos: {
+      pr_using: true
     }
   },
   PSE: {
