@@ -19,7 +19,7 @@ window.procesadoresConfig = {
     campos: {
       rb_idAdquiriente: { tipo: 'texto' },
       rb_idTerminal: { tipo: 'texto' }
-    }
+    },
     fijos: {
       rb_capacidadPIN: "Virtual",
       rb_modoCapturaPAN: "Manual",
