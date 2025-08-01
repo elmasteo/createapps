@@ -98,10 +98,12 @@
       log.textContent = '';
       const apps = document.querySelectorAll('.app-container');
       for (const app of apps) {
+        const ownerName = app.querySelector('[name="name"]')?.value || app.querySelector('[name="owner_name"]').value;
+
         const payload = {
           code: app.querySelector('[name="code"]').value,
-          name: payload.owner_name = app.querySelector('[name="name"]')?.value || app.querySelector('[name="owner_name"]').value,
-          owner_name: app.querySelector('[name="owner_name"]').value,
+          name: ownerName,
+          owner_name: ownerName,
           callback_url: app.querySelector('[name="callback_url"]').value,
           currency: app.querySelector('[name="currency"]').value,
           tipo_integracion: app.querySelector('[name="tipo_integracion"]').value,
