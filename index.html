@@ -2,11 +2,14 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Generador de Apps - Paymentez</title>
+  <title>Generador de Apps</title>
   <style>
     body { font-family: sans-serif; margin: 20px; }
-    .app-container { margin-bottom: 20px; border: 1px solid #ccc; padding: 10px; }
-    .log { background: #f5f5f5; padding: 10px; white-space: pre-wrap; height: 200px; overflow-y: auto; border: 1px solid #ccc; }
+    .app-container, .proc-container { border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; }
+    .log { background: #f5f5f5; padding: 10px; white-space: pre-wrap; height: 300px; overflow-y: auto; border: 1px solid #ccc; }
+    .field-pair { display: flex; gap: 10px; margin-bottom: 5px; }
+    .field-pair input { width: 45%; }
+    button { margin-top: 5px; }
   </style>
 </head>
 <body>
@@ -33,17 +36,42 @@
         Callback URL: <input name="callback_url"><br>
         Moneda: <input name="currency" value="COP"><br>
         Tipo de integración: 
-          <select name="tipo_integracion">
-            <option value="SERVER/CLIENT">SERVER/CLIENT</option>
-            <option value="PCI">PCI</option>
-            <option value="LTP">LTP</option>
-          </select><br><br>
-
-        Procesadores:<br>
-        <textarea name="procesadores" rows="5" placeholder='[{"tipo": "CBCO", "campos": {"cb_acquirer_id":"1", "cb_commerce_id": "012345600"}}]'></textarea><br>
+        <select name="tipo_integracion">
+          <option value="SERVER/CLIENT">SERVER/CLIENT</option>
+          <option value="PCI">PCI</option>
+          <option value="LTP">LTP</option>
+        </select><br><br>
+        <div class="procesadores"></div>
+        <button type="button" onclick="addProcesador(this)">+ Procesador</button>
       `;
       document.getElementById('apps').appendChild(container);
       appIndex++;
+    }
+
+    function addProcesador(btn) {
+      const contenedor = btn.previousElementSibling;
+      const proc = document.createElement('div');
+      proc.className = 'proc-container';
+      proc.innerHTML = `
+        Tipo procesador: <input name="tipo"><br>
+        Carrier ID: <input name="carrier" type="number"><br>
+        <div class="campos"></div>
+        <button type="button" onclick="addCampo(this)">+ Campo</button>
+        <button type="button" onclick="this.parentElement.remove()">Eliminar Procesador</button>
+      `;
+      contenedor.appendChild(proc);
+    }
+
+    function addCampo(btn) {
+      const camposDiv = btn.previousElementSibling;
+      const pair = document.createElement('div');
+      pair.className = 'field-pair';
+      pair.innerHTML = `
+        <input placeholder="Nombre del campo">
+        <input placeholder="Valor del campo">
+        <button onclick="this.parentElement.remove()">❌</button>
+      `;
+      camposDiv.appendChild(pair);
     }
 
     async function enviarApps() {
@@ -52,6 +80,20 @@
       log.textContent = 'Procesando...\n';
 
       for (const app of apps) {
+        const procesadores = [];
+        const procContainers = app.querySelectorAll('.proc-container');
+        for (const proc of procContainers) {
+          const tipo = proc.querySelector('[name="tipo"]').value;
+          const carrier = parseInt(proc.querySelector('[name="carrier"]').value);
+          const campos = {};
+          proc.querySelectorAll('.field-pair').forEach(pair => {
+            const key = pair.children[0].value.trim();
+            const value = pair.children[1].value.trim();
+            if (key) campos[key] = isNaN(value) ? value : Number(value);
+          });
+          procesadores.push({ tipo, carrier, campos });
+        }
+
         const payload = {
           code: app.querySelector('[name="code"]').value,
           name: app.querySelector('[name="name"]').value,
@@ -61,9 +103,7 @@
           tipo_integracion: app.querySelector('[name="tipo_integracion"]').value,
           use_ccapi_announce: true,
           http_notifications_enabled: true,
-          carrier: 67,
-          carriers: [{ max: 1000.0, prefix: "CBCO", carrier: 67, order: 1, min: 1.0 }],
-          procesadores: JSON.parse(app.querySelector('[name="procesadores"]').value)
+          procesadores
         };
 
         try {
@@ -73,9 +113,9 @@
             body: JSON.stringify(payload)
           });
           const data = await res.json();
-          log.textContent += `App "${payload.code}" creada:\n${JSON.stringify(data, null, 2)}\n\n`;
+          log.textContent += `Resultado para "${payload.code}":\n${JSON.stringify(data, null, 2)}\n\n`;
         } catch (e) {
-          log.textContent += `Error creando "${payload.code}": ${e.message}\n`;
+          log.textContent += `Error procesando "${payload.code}": ${e.message}\n`;
         }
       }
     }
