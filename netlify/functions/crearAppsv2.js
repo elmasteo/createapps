@@ -36,9 +36,15 @@ exports.handler = async (event) => {
       Authorization: `Token ${token}`
     };
 
-    const integrations = tipo_integracion === 'SERVER/CLIENT'
-      ? [`${code}-SERVER`, `${code}-CLIENT`]
-      : [code];
+    let integrations = [];
+
+      if (tipo_integracion === 'SERVER/CLIENT') {
+        integrations = [`${code}-SERVER`, `${code}-CLIENT`];
+      } else if (tipo_integracion === 'LTP') {
+        integrations = [`${code}-LTP`];
+      } else {
+        integrations = [code];
+      }
 
     const responses = [];
     const createdApps = {};
@@ -46,7 +52,7 @@ exports.handler = async (event) => {
     const globalCarriers = procesadores.map(p => ({
       carrier: p.carrier,
       prefix: p.tipo,
-      max: 1000.0,
+      max: 100000000.0,
       min: 1.0,
       order: 1
     }));
