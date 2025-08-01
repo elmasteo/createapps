@@ -68,14 +68,21 @@ exports.handler = async (event) => {
       currency,
       carrier,
       carriers,
-      ...proc.campos
+      procesadores: [
+        {
+          tipo: proc.tipo,
+          carrier: proc.carrier,
+          campos: proc.campos
+        }
+      ]
     };
 
-    // NO REUTILIZAR body, SIEMPRE JSON.stringify NUEVO
+    console.log('Enviando a CCAPI:', JSON.stringify(appPayload, null, 2));
+
     const res = await fetch(`${CCAPI_URL}/v3/application`, {
       method: 'POST',
       headers,
-      body: JSON.stringify(appPayload) // <= IMPORTANTE: generar en cada iteración
+      body: JSON.stringify(appPayload)
     });
 
     let responseData;
@@ -94,6 +101,7 @@ exports.handler = async (event) => {
     });
   }
 }
+
 
 
     return {
