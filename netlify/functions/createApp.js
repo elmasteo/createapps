@@ -47,56 +47,52 @@ exports.handler = async (event) => {
       ? [`${code}-SERVER`, `${code}-CLIENT`]
       : [code];
 
-    for (const integrationCode of integrations) {
-  for (const proc of procesadores) {
-    const carrier = proc.carrier;
-    const carriers = [{
-      carrier: proc.carrier,
-      prefix: proc.tipo,
-      max: 1000.0,
-      min: 1.0,
-      order: 1
-    }];
+  for (const integrationCode of integrations) {
+  const proc = procesadores[0]; // solo uno por app
+  const carrier = proc.carrier;
+  const carriers = [{
+    carrier,
+    prefix: proc.tipo,
+    max: 1000.0,
+    min: 1.0,
+    order: 1
+  }];
 
-    const camposCopia = JSON.parse(JSON.stringify(proc.campos)); // fuerza una copia limpia
+  const camposCopia = JSON.parse(JSON.stringify(proc.campos));
 
-    const appPayload = {
-      name,
-      code: integrationCode,
-      owner_name,
-      callback_url,
-      use_ccapi_announce,
-      http_notifications_enabled,
-      currency,
-      carrier,
-      carriers,
-      ...camposCopia
-    };
+  const appPayload = {
+    name,
+    code: integrationCode,
+    owner_name,
+    callback_url,
+    use_ccapi_announce,
+    http_notifications_enabled,
+    currency,
+    carrier,
+    carriers,
+    ...camposCopia
+  };
 
+  const res = await fetch(`${CCAPI_URL}/v3/application`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(appPayload)
+  });
 
-    console.log('Enviando a CCAPI:', JSON.stringify(appPayload, null, 2));
-
-    const res = await fetch(`${CCAPI_URL}/v3/application`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(appPayload)
-    });
-
-    let responseData;
-    try {
-      responseData = await res.json();
-    } catch (jsonErr) {
-      const errText = await res.text();
-      responseData = { error: 'Respuesta no JSON', detalle: errText };
-    }
-
-    responses.push({
-      integrationCode,
-      procesador: proc.tipo,
-      status: res.status,
-      response: responseData
-    });
+  let responseData;
+  try {
+    responseData = await res.json();
+  } catch (jsonErr) {
+    const errText = await res.text();
+    responseData = { error: 'Respuesta no JSON', detalle: errText };
   }
+
+  responses.push({
+    integrationCode,
+    procesador: proc.tipo,
+    status: res.status,
+    response: responseData
+  });
 }
 
 
