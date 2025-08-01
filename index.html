@@ -31,7 +31,6 @@
       container.innerHTML = `
         <h3>App ${appIndex + 1}</h3>
         Código: <input name="code"><br>
-        Nombre: <input name="name"><br>
         Owner: <input name="owner_name"><br>
         Callback URL: <input name="callback_url"><br>
         Moneda: <input name="currency" value="COP"><br>
@@ -96,7 +95,7 @@
 
         const payload = {
           code: app.querySelector('[name="code"]').value,
-          name: app.querySelector('[name="name"]').value,
+          name: app.querySelector('[name="owner_name"]').value,
           owner_name: app.querySelector('[name="owner_name"]').value,
           callback_url: app.querySelector('[name="callback_url"]').value,
           currency: app.querySelector('[name="currency"]').value,
