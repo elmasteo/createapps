@@ -1,4 +1,4 @@
-const processorSchemas = {
+window.procesadoresConfig = {
   CBCO: {
     visible: ['prefix', 'max', 'min', 'order'],
     fixed: { prefix: 'CBCO', max: 10000000000.0, min: 1.0, order: 1 },

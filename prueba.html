@@ -19,15 +19,7 @@
   <div id="log" class="log"></div>
 
   <script>
-    async function loadConfig() {
-      const resp = await fetch('/procesadores.js');
-      const text = await resp.text();
-      const config = eval(text.match(/module\.exports\s*=\s*(\{[\s\S]*\});/)[1]);
-      return config;
-    }
-
-    let procesadoresConfig = null;
-    loadConfig().then(cfg => procesadoresConfig = cfg);
+    let procesadoresConfig = window.procesadoresConfig;
 
     let appIndex = 0;
     function addApp() {
