@@ -58,6 +58,8 @@ exports.handler = async (event) => {
       order: 1
     }];
 
+    const camposCopia = JSON.parse(JSON.stringify(proc.campos)); // fuerza una copia limpia
+
     const appPayload = {
       name,
       code: integrationCode,
@@ -68,8 +70,9 @@ exports.handler = async (event) => {
       currency,
       carrier,
       carriers,
-      ...proc.campos // <-- ¡esto es lo importante!
+      ...camposCopia
     };
+
 
     console.log('Enviando a CCAPI:', JSON.stringify(appPayload, null, 2));
 
