@@ -48,51 +48,53 @@ exports.handler = async (event) => {
       : [code];
 
     for (const integrationCode of integrations) {
-      for (const proc of procesadores) {
-        const carrier = proc.carrier;
-        const carriers = procesadores.map(p => ({
-          carrier: p.carrier,
-          prefix: p.tipo,
-          max: 1000.0,
-          min: 1.0,
-          order: 1
-        }));
+  for (const proc of procesadores) {
+    const carrier = proc.carrier;
+    const carriers = procesadores.map(p => ({
+      carrier: p.carrier,
+      prefix: p.tipo,
+      max: 1000.0,
+      min: 1.0,
+      order: 1
+    }));
 
-        const appPayload = {
-          name,
-          code: integrationCode,
-          owner_name,
-          callback_url,
-          use_ccapi_announce,
-          http_notifications_enabled,
-          currency,
-          carrier,
-          carriers,
-          ...proc.campos // campos específicos del procesador
-        };
+    const appPayload = {
+      name,
+      code: integrationCode,
+      owner_name,
+      callback_url,
+      use_ccapi_announce,
+      http_notifications_enabled,
+      currency,
+      carrier,
+      carriers,
+      ...proc.campos
+    };
 
-        const res = await fetch(`${CCAPI_URL}/v3/application`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(appPayload)
-        });
+    // NO REUTILIZAR body, SIEMPRE JSON.stringify NUEVO
+    const res = await fetch(`${CCAPI_URL}/v3/application`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(appPayload) // <= IMPORTANTE: generar en cada iteración
+    });
 
-        let responseData;
-          try {
-            responseData = await res.json();
-          } catch (jsonErr) {
-            const errText = await res.text();
-            responseData = { error: 'Respuesta no JSON', detalle: errText };
-          }
-
-        responses.push({
-          integrationCode,
-          procesador: proc.tipo,
-          status: res.status,
-          response: responseData
-        });
-      }
+    let responseData;
+    try {
+      responseData = await res.json();
+    } catch (jsonErr) {
+      const errText = await res.text();
+      responseData = { error: 'Respuesta no JSON', detalle: errText };
     }
+
+    responses.push({
+      integrationCode,
+      procesador: proc.tipo,
+      status: res.status,
+      response: responseData
+    });
+  }
+}
+
 
     return {
       statusCode: 200,
