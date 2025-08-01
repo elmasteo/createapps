@@ -46,44 +46,51 @@
     }
 
     function addProcesador(btn) {
-      if (!procesadoresConfig) return;
-      const pdiv = document.createElement('div');
-      pdiv.className = 'proc-container';
-      pdiv.innerHTML = `
-        <label>Procesador:
-          <select name="tipo">${Object.keys(procesadoresConfig).map(k=>`<option>${k}</option>`).join('')}</select>
-        </label>
-        <div class="campos"></div>
-        <button type="button" onclick="renderCampos(this)">Cargar campos</button>
-        <button type="button" onclick="this.parentElement.remove()">Eliminar Procesador</button>
-      `;
-      btn.previousElementSibling.appendChild(pdiv);
-    }
+    if (!procesadoresConfig) return;
+    const pdiv = document.createElement('div');
+    pdiv.className = 'proc-container';
+    pdiv.innerHTML = `
+      <label>Procesador:
+        <select name="tipo" onchange="renderCampos(this)">
+          ${Object.keys(procesadoresConfig).map(k => `<option>${k}</option>`).join('')}
+        </select>
+      </label>
+      <div class="campos"></div>
+      <button type="button" onclick="this.parentElement.remove()">Eliminar Procesador</button>
+    `;
+    btn.parentElement.querySelector('.procesadores').appendChild(pdiv);
+    
+    // Llama a renderCampos inmediatamente con el <select>
+    const select = pdiv.querySelector('[name="tipo"]');
+    renderCampos(select);
+  }
 
-    function renderCampos(btn) {
-      const proc = btn.parentElement;
-      const tipo = proc.querySelector('[name="tipo"]').value;
-      const spec = procesadoresConfig[tipo];
-      const div = proc.querySelector('.campos');
-      div.innerHTML = '';
-      Object.entries(spec.campos).forEach(([field, def]) => {
-        if (def.valorFijo !== undefined) {
-          // oculto campo fijo
-          const inp = document.createElement('input');
-          inp.type = 'hidden';
-          inp.name = field;
-          inp.value = def.valorFijo;
-          div.appendChild(inp);
-        } else {
-          const lbl = document.createElement('label');
-          lbl.textContent = field;
-          const inp = document.createElement('input');
-          inp.name = field;
-          lbl.appendChild(inp);
-          div.appendChild(lbl);
-        }
-      });
-    }
+
+    function renderCampos(el) {
+    const select = el.tagName === 'SELECT' ? el : el.parentElement.querySelector('[name="tipo"]');
+    const proc = select.closest('.proc-container');
+    const tipo = select.value;
+    const spec = procesadoresConfig[tipo];
+    const div = proc.querySelector('.campos');
+    div.innerHTML = '';
+    Object.entries(spec.campos).forEach(([field, def]) => {
+      if (def.valorFijo !== undefined) {
+        const inp = document.createElement('input');
+        inp.type = 'hidden';
+        inp.name = field;
+        inp.value = def.valorFijo;
+        div.appendChild(inp);
+      } else {
+        const lbl = document.createElement('label');
+        lbl.textContent = field;
+        const inp = document.createElement('input');
+        inp.name = field;
+        lbl.appendChild(inp);
+        div.appendChild(lbl);
+      }
+    });
+  }
+
 
     async function enviarApps() {
       const log = document.getElementById('log');
