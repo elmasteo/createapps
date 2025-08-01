@@ -19,7 +19,6 @@
   <div id="log" class="log"></div>
 
   <script>
-    let procesadoresConfig = window.procesadoresConfig;
 
     let appIndex = 0;
     function addApp() {
@@ -133,7 +132,17 @@
       }
     }
   </script>
-  <script src="procesadores.js"></script>
+  <script>
+  let procesadoresConfig = null;
+
+  window.onload = function () {
+    // Asegura que el script procesadores.js ya se cargó
+    procesadoresConfig = window.procesadoresConfig;
+    addApp(); // Puedes cargar una app por defecto al inicio si lo deseas
+  };
+</script>
+<script src="procesadores.js"></script>
+
 
 </body>
 </html>
