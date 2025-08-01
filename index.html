@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Generador de Apps - Paymentez</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    .app-container { margin-bottom: 20px; border: 1px solid #ccc; padding: 10px; }
+    .log { background: #f5f5f5; padding: 10px; white-space: pre-wrap; height: 200px; overflow-y: auto; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <h1>Generador de Apps</h1>
+
+  <div id="apps"></div>
+  <button onclick="addApp()">Agregar App</button>
+  <button onclick="enviarApps()">Enviar Todo</button>
+
+  <h2>Logs</h2>
+  <div id="log" class="log"></div>
+
+  <script>
+    let appIndex = 0;
+
+    function addApp() {
+      const container = document.createElement('div');
+      container.className = 'app-container';
+      container.innerHTML = `
+        <h3>App ${appIndex + 1}</h3>
+        Código: <input name="code"><br>
+        Nombre: <input name="name"><br>
+        Owner: <input name="owner_name"><br>
+        Callback URL: <input name="callback_url"><br>
+        Moneda: <input name="currency" value="COP"><br>
+        Tipo de integración: 
+          <select name="tipo_integracion">
+            <option value="SERVER/CLIENT">SERVER/CLIENT</option>
+            <option value="PCI">PCI</option>
+            <option value="LTP">LTP</option>
+          </select><br><br>
+
+        Procesadores:<br>
+        <textarea name="procesadores" rows="5" placeholder='[{"tipo": "CBCO", "campos": {"cb_acquirer_id":"1", "cb_commerce_id": "012345600"}}]'></textarea><br>
+      `;
+      document.getElementById('apps').appendChild(container);
+      appIndex++;
+    }
+
+    async function enviarApps() {
+      const apps = document.querySelectorAll('.app-container');
+      const log = document.getElementById('log');
+      log.textContent = 'Procesando...\n';
+
+      for (const app of apps) {
+        const payload = {
+          code: app.querySelector('[name="code"]').value,
+          name: app.querySelector('[name="name"]').value,
+          owner_name: app.querySelector('[name="owner_name"]').value,
+          callback_url: app.querySelector('[name="callback_url"]').value,
+          currency: app.querySelector('[name="currency"]').value,
+          tipo_integracion: app.querySelector('[name="tipo_integracion"]').value,
+          use_ccapi_announce: true,
+          http_notifications_enabled: true,
+          carrier: 67,
+          carriers: [{ max: 1000.0, prefix: "CBCO", carrier: 67, order: 1, min: 1.0 }],
+          procesadores: JSON.parse(app.querySelector('[name="procesadores"]').value)
+        };
+
+        try {
+          const res = await fetch('/.netlify/functions/createApp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          log.textContent += `App "${payload.code}" creada:\n${JSON.stringify(data, null, 2)}\n\n`;
+        } catch (e) {
+          log.textContent += `Error creando "${payload.code}": ${e.message}\n`;
+        }
+      }
+    }
+  </script>
+</body>
+</html>
