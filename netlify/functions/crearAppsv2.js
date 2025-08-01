@@ -53,6 +53,13 @@ exports.handler = async (event) => {
 
     for (const integrationCode of integrations) {
       const p = procesadores[0];
+
+      // Combinar campos dinámicos y fijos si existen
+      const camposCombinados = {
+        ...(p.fijos || {}),
+        ...(p.campos || {})
+      };
+
       const appPayload = {
         name,
         code: integrationCode,
@@ -63,7 +70,7 @@ exports.handler = async (event) => {
         currency,
         carrier: p.carrier,
         carriers: globalCarriers,
-        ...JSON.parse(JSON.stringify(p.campos))
+        ...JSON.parse(JSON.stringify(camposCombinados))
       };
 
       const res = await fetch(`${CCAPI_URL}/v3/application`, {
@@ -81,10 +88,12 @@ exports.handler = async (event) => {
       }
 
       responses.push({ integrationCode, procesador: p.tipo, status: res.status, response: json });
+
       if (res.ok) {
         createdApps[integrationCode] = json;
       }
     }
+
 
     let noccapiResponse = null;
     const serverCode = tipo_integracion === 'SERVER/CLIENT' ? `${code}-SERVER` : integrations[0];
@@ -123,7 +132,7 @@ exports.handler = async (event) => {
               terminal_id: campos_extras?.pse_terminal_id || '',
               country_default: 'COL',
               agreement: {
-                ciiu: '',
+                ciiu: campos_extras?.beneficiaryEntityCIIUCategory || '',
                 is_v2: true,
                 beneficiaryData: {
                   beneficiaryEntityName: campos_extras?.beneficiaryEntityName || '',
