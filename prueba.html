@@ -46,24 +46,26 @@
     }
 
     function addProcesador(btn) {
-    if (!procesadoresConfig) return;
-    const pdiv = document.createElement('div');
-    pdiv.className = 'proc-container';
-    pdiv.innerHTML = `
-      <label>Procesador:
-        <select name="tipo" onchange="renderCampos(this)">
-          ${Object.keys(procesadoresConfig).map(k => `<option>${k}</option>`).join('')}
-        </select>
-      </label>
-      <div class="campos"></div>
-      <button type="button" onclick="this.parentElement.remove()">Eliminar Procesador</button>
-    `;
-    btn.parentElement.querySelector('.procesadores').appendChild(pdiv);
-    
-    // Llama a renderCampos inmediatamente con el <select>
-    const select = pdiv.querySelector('[name="tipo"]');
-    renderCampos(select);
-  }
+      if (!procesadoresConfig) return;
+      const pdiv = document.createElement('div');
+      pdiv.className = 'proc-container';
+      pdiv.innerHTML = `
+        <label>Procesador:
+          <select name="tipo" onchange="renderCampos(this)">
+            ${Object.keys(procesadoresConfig).map(k => `<option>${k}</option>`).join('')}
+          </select>
+        </label>
+        <div class="campos"></div>
+        <button type="button" onclick="this.parentElement.remove()">Eliminar Procesador</button>
+      `;
+      
+      // 🛠 Esta es la línea corregida
+      btn.closest('.app-container').querySelector('.procesadores').appendChild(pdiv);
+
+      const select = pdiv.querySelector('[name="tipo"]');
+      renderCampos(select);
+    }
+
 
 
     function renderCampos(el) {
