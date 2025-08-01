@@ -27,7 +27,7 @@ window.procesadoresConfig = {
       rb_tipoTerminal: "WEB",
       rb_username: "0013974936",
       rb_wsdl_cancelacion_url:"http://cdn-checkout-1.paymentez.com.s3.amazonaws.com/backend/redeban_prod/CompraCancelacion/CompraElectronicaCancelacionService.wsdl",
-      rb_wsdl_compra_url: "http://cdn-checkout-1.paymentez.com.s3.amazonaws.com/backend/redeban_prod/compraElectronica/CompraElectronicaService.wsdl"
+      rb_wsdl_compra_url: "http://cdn-checkout-1.paymentez.com.s3.amazonaws.com/backend/redeban_prod/compraElectronica/CompraElectronicaService.wsdl",
       rb_using: true
     }
   },
