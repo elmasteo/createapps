@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Generador de Apps</title>
+  <link rel="icon" href="https://docs.nuvei.com/wp-content/themes/manual-child/img/favicons/cropped-favicon-nuvei-32x32.png" sizes="32x32">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
     * {
@@ -12,27 +13,49 @@
     body {
       font-family: 'Inter', sans-serif;
       background: #e9ecef;
-      padding: 40px 20px;
       margin: 0;
+      padding: 20px;
       display: flex;
-      flex-direction: column;
-      align-items: center;
+      justify-content: center;
     }
 
     .container {
-      max-width: 1300px;
-      width: 100%;
-      background: #fff;
-      padding: 24px;
-      border-radius: 14px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
       display: flex;
-      gap: 24px;
       flex-direction: row;
+      max-width: 1200px;
+      width: 100%;
+      gap: 20px;
+    }
+
+    .logo-wrapper {
+      width: 100%;
+      max-width: 1000px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .logo-wrapper img {
+      max-width: 180px;
+      height: auto;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
     }
 
     .form-section {
       flex: 2;
+      background: #fff;
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .log-section {
+      flex: 1;
+      background: #fff;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
       display: flex;
       flex-direction: column;
     }
@@ -40,8 +63,8 @@
     h1, h2, h3 {
       font-size: 18px;
       font-weight: 600;
-      color: #212529;
       margin-bottom: 12px;
+      color: #212529;
     }
 
     label {
@@ -52,7 +75,7 @@
       font-size: 14px;
     }
 
-    input {
+    input, select {
       width: 100%;
       padding: 10px 12px;
       margin-top: 5px;
@@ -60,10 +83,9 @@
       border-radius: 8px;
       font-size: 14px;
       background: #f8f9fa;
-      transition: border-color 0.2s, box-shadow 0.2s;
     }
 
-    input:focus {
+    input:focus, select:focus {
       outline: none;
       border-color: #339af0;
       box-shadow: 0 0 0 2px rgba(51,154,240,0.2);
@@ -93,11 +115,12 @@
       color: #39ff14;
       padding: 12px;
       font-family: monospace;
-      height: 700px;
+      height: 100%;
       overflow-y: auto;
       border-radius: 8px;
       font-size: 13px;
       border: 1px solid #333;
+      flex-grow: 1;
     }
 
     .app-container, .proc-container {
@@ -108,39 +131,31 @@
       background: #f8f9fa;
     }
 
-    select {
-      width: 100%;
-      padding: 10px 12px;
-      margin-top: 5px;
-      border: 1px solid #ced4da;
-      border-radius: 8px;
-      font-size: 14px;
-      background: #f8f9fa;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    select:focus {
-      outline: none;
-      border-color: #339af0;
-      box-shadow: 0 0 0 2px rgba(51,154,240,0.2);
-      background: #fff;
-    }
-
-    @media (max-width: 768px) {
+    @media (max-width: 900px) {
       .container {
         flex-direction: column;
+      }
+
+      .log-section {
+        height: 300px;
       }
     }
   </style>
 </head>
 <body>
+  <div class="logo-wrapper">
+    <img src="https://cdn.paymentez.com/img/nv/nuvei_logo.png" alt="Nuvei Logo">
+  </div>
   <div class="container">
-    <h1>Generador de Apps</h1>
+    <!-- Panel izquierdo: Formularios -->
     <div class="form-section">
+      <h1>Generador de Apps</h1>
       <div id="apps"></div>
       <button onclick="addApp()">+ Agregar App</button>
       <button onclick="enviarApps()">Enviar Todo</button>
     </div>
+
+    <!-- Panel derecho: Log -->
     <div class="log-section">
       <h2>Logs</h2>
       <div id="log" class="log"></div>
