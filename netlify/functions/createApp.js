@@ -78,12 +78,12 @@ exports.handler = async (event) => {
         });
 
         let responseData;
-        try {
-          responseData = await res.json();
-        } catch (jsonErr) {
-          const errText = await res.text();
-          responseData = { error: 'Respuesta no JSON', detalle: errText };
-        }
+          try {
+            responseData = await res.json();
+          } catch (jsonErr) {
+            const errText = await res.text();
+            responseData = { error: 'Respuesta no JSON', detalle: errText };
+          }
 
         responses.push({
           integrationCode,

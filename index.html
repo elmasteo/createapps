@@ -88,7 +88,18 @@
           proc.querySelectorAll('.field-pair').forEach(pair => {
             const key = pair.children[0].value.trim();
             const value = pair.children[1].value.trim();
-            if (key) campos[key] = isNaN(value) ? value : Number(value);
+            if (key) {
+              if (value.toLowerCase() === "true") {
+                campos[key] = true;
+              } else if (value.toLowerCase() === "false") {
+                campos[key] = false;
+              } else if (!isNaN(value) && !/^0[0-9]/.test(value)) {
+                campos[key] = Number(value);
+              } else {
+                campos[key] = value; // mantener como string si empieza con 0 o no es número
+              }
+            }
+
           });
           procesadores.push({ tipo, carrier, campos });
         }
