@@ -3,33 +3,160 @@
 <head>
   <meta charset="UTF-8" />
   <title>Generador de Apps</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    body { font-family: sans-serif; margin:20px; }
-    .app-container, .proc-container { border:1px solid #ccc; padding:10px; margin-bottom:15px; }
-    .log { background:#f5f5f5; padding:10px; white-space:pre-wrap; height:300px; overflow-y:auto; border:1px solid #ccc; }
-    label { display:block; margin-bottom:5px; }
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #e9ecef;
+      padding: 40px 20px;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      max-width: 1000px;
+      width: 100%;
+      background: #fff;
+      padding: 24px;
+      border-radius: 14px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      display: flex;
+      gap: 24px;
+      flex-direction: column;
+    }
+
+    .form-section, .log-section {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    h1, h2, h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #212529;
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      margin-top: 14px;
+      font-weight: 600;
+      color: #495057;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      margin-top: 5px;
+      border: 1px solid #ced4da;
+      border-radius: 8px;
+      font-size: 14px;
+      background: #f8f9fa;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #339af0;
+      box-shadow: 0 0 0 2px rgba(51,154,240,0.2);
+      background: #fff;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #081f2c;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      margin-top: 24px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #175b81;
+    }
+
+    .log {
+      background: #111;
+      color: #39ff14;
+      padding: 12px;
+      font-family: monospace;
+      height: 700px;
+      overflow-y: auto;
+      border-radius: 8px;
+      font-size: 13px;
+      border: 1px solid #333;
+    }
+
+    .app-container, .proc-container {
+      border: 1px solid #dee2e6;
+      padding: 14px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      background: #f8f9fa;
+    }
+
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      margin-top: 5px;
+      border: 1px solid #ced4da;
+      border-radius: 8px;
+      font-size: 14px;
+      background: #f8f9fa;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #339af0;
+      box-shadow: 0 0 0 2px rgba(51,154,240,0.2);
+      background: #fff;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+    }
   </style>
 </head>
 <body>
-  <h1>Generador de Apps</h1>
-  <div id="apps"></div>
-  <button onclick="addApp()">+ Agregar App</button>
-  <button onclick="enviarApps()">Enviar Todo</button>
-  <h2>Logs</h2>
-  <div id="log" class="log"></div>
+  <div class="container">
+    <h1>Generador de Apps</h1>
+    <div class="form-section">
+      <div id="apps"></div>
+      <button onclick="addApp()">+ Agregar App</button>
+      <button onclick="enviarApps()">Enviar Todo</button>
+    </div>
+    <div class="log-section">
+      <h2>Logs</h2>
+      <div id="log" class="log"></div>
+    </div>
+  </div>
 
   <script>
-
     let appIndex = 0;
     function addApp() {
       const c = document.createElement('div');
       c.className = 'app-container';
       c.innerHTML = `
-        <h3>App ${appIndex+1}</h3>
-        <label>Código: <input name="code"/></label>
-        <label>Owner: <input name="owner_name"/></label>
-        <label>Callback URL: <input name="callback_url"/></label>
-        <label>Moneda: <input name="currency" value="COP"/></label>
+        <h3>App ${appIndex + 1}</h3>
+        <label>Código: <input name="code" /></label>
+        <label>Owner: <input name="owner_name" /></label>
+        <label>Callback URL: <input name="callback_url" /></label>
+        <label>Moneda: <input name="currency" value="COP" /></label>
         <label>Tipo integración:
           <select name="tipo_integracion">
             <option value="SERVER/CLIENT">SERVER/CLIENT</option>
@@ -57,41 +184,35 @@
         <div class="campos"></div>
         <button type="button" onclick="this.parentElement.remove()">Eliminar Procesador</button>
       `;
-      
-      // 🛠 Esta es la línea corregida
       btn.closest('.app-container').querySelector('.procesadores').appendChild(pdiv);
-
       const select = pdiv.querySelector('[name="tipo"]');
       renderCampos(select);
     }
 
-
-
     function renderCampos(el) {
-    const select = el.tagName === 'SELECT' ? el : el.parentElement.querySelector('[name="tipo"]');
-    const proc = select.closest('.proc-container');
-    const tipo = select.value;
-    const spec = procesadoresConfig[tipo];
-    const div = proc.querySelector('.campos');
-    div.innerHTML = '';
-    Object.entries(spec.campos).forEach(([field, def]) => {
-      if (def.valorFijo !== undefined) {
-        const inp = document.createElement('input');
-        inp.type = 'hidden';
-        inp.name = field;
-        inp.value = def.valorFijo;
-        div.appendChild(inp);
-      } else {
-        const lbl = document.createElement('label');
-        lbl.textContent = field;
-        const inp = document.createElement('input');
-        inp.name = field;
-        lbl.appendChild(inp);
-        div.appendChild(lbl);
-      }
-    });
-  }
-
+      const select = el.tagName === 'SELECT' ? el : el.parentElement.querySelector('[name="tipo"]');
+      const proc = select.closest('.proc-container');
+      const tipo = select.value;
+      const spec = procesadoresConfig[tipo];
+      const div = proc.querySelector('.campos');
+      div.innerHTML = '';
+      Object.entries(spec.campos).forEach(([field, def]) => {
+        if (def.valorFijo !== undefined) {
+          const inp = document.createElement('input');
+          inp.type = 'hidden';
+          inp.name = field;
+          inp.value = def.valorFijo;
+          div.appendChild(inp);
+        } else {
+          const lbl = document.createElement('label');
+          lbl.textContent = field;
+          const inp = document.createElement('input');
+          inp.name = field;
+          lbl.appendChild(inp);
+          div.appendChild(lbl);
+        }
+      });
+    }
 
     async function enviarApps() {
       const log = document.getElementById('log');
@@ -111,10 +232,11 @@
           http_notifications_enabled: true,
           procesadores: []
         };
-        app.querySelectorAll('.proc-container').forEach(p=> {
+
+        app.querySelectorAll('.proc-container').forEach(p => {
           const tipo = p.querySelector('[name="tipo"]').value;
           const campos = {};
-          p.querySelectorAll('input').forEach(i=>{
+          p.querySelectorAll('input').forEach(i => {
             if (i.name) campos[i.name] = i.value === 'true' ? true : (i.value === 'false' ? false : i.value);
           });
           payload.procesadores.push({
@@ -126,25 +248,21 @@
 
         const resp = await fetch('/.netlify/functions/crearAppsv2', {
           method: 'POST',
-          headers: {'Content-Type':'application/json'},
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
         const data = await resp.json();
-        log.textContent += `App ${payload.code} → ${JSON.stringify(data, null,2)}\n\n`;
+        log.textContent += `App ${payload.code} → ${JSON.stringify(data, null, 2)}\n\n`;
       }
     }
+
+    let procesadoresConfig = null;
+
+    window.onload = function () {
+      procesadoresConfig = window.procesadoresConfig;
+      addApp();
+    };
   </script>
-  <script>
-  let procesadoresConfig = null;
-
-  window.onload = function () {
-    // Asegura que el script procesadores.js ya se cargó
-    procesadoresConfig = window.procesadoresConfig;
-    addApp(); // Puedes cargar una app por defecto al inicio si lo deseas
-  };
-</script>
-<script src="procesadores.js"></script>
-
-
+  <script src="procesadores.js"></script>
 </body>
 </html>
