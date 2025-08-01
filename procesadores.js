@@ -38,8 +38,7 @@ window.procesadoresConfig = {
       pr_acceptor_location_id: { tipo: 'texto' },
       pr_fiid: { tipo: 'texto' },
       pr_merchant_type: { tipo: 'texto' },
-      pr_acceptor_name: { tipo: 'texto' },
-      pr_using: { tipo: 'booleano' }
+      pr_acceptor_name: { tipo: 'texto' }
     },
     fijos: {
       pr_using: true
