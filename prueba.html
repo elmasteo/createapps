@@ -186,30 +186,50 @@ button:hover {
   </div>
 
   <script>
-    let appIndex = 0;
-    function addApp() {
-      const c = document.createElement('div');
-      c.className = 'app-container';
-      c.innerHTML = `
-        <button class="remove-app" onclick="this.parentElement.remove()" title="Eliminar App">×</button>
-        <h3>App ${appIndex + 1}</h3>
-        <label>Código: <input name="code" /></label>
-        <label>Owner: <input name="owner_name" /></label>
-        <label>Callback URL: <input name="callback_url" /></label>
-        <label>Moneda: <input name="currency" value="COP" /></label>
-        <label>Tipo integración:
-          <select name="tipo_integracion">
-            <option value="SERVER/CLIENT">SERVER/CLIENT</option>
-            <option value="PCI">PCI</option>
-            <option value="LTP">LTP</option>
-          </select>
-        </label>
-        <div class="procesadores"></div>
-        <button type="button" onclick="addProcesador(this)">+ Procesador</button>
-      `;
-      document.getElementById('apps').appendChild(c);
-      appIndex++;
-    }
+let appIndex = 0;
+
+function addApp() {
+  const c = document.createElement('div');
+  c.className = 'app-container';
+  c.innerHTML = `
+    <button class="remove-app" onclick="removeApp(this)" title="Eliminar App">×</button>
+    <h3>App ${appIndex + 1}</h3>
+    <label>Código: <input name="code" /></label>
+    <label>Owner: <input name="owner_name" /></label>
+    <label>Callback URL: <input name="callback_url" /></label>
+    <label>Moneda: <input name="currency" value="COP" /></label>
+    <label>Tipo integración:
+      <select name="tipo_integracion">
+        <option value="SERVER/CLIENT">SERVER/CLIENT</option>
+        <option value="PCI">PCI</option>
+        <option value="LTP">LTP</option>
+      </select>
+    </label>
+    <div class="procesadores"></div>
+    <button type="button" onclick="addProcesador(this)">+ Procesador</button>
+  `;
+  document.getElementById('apps').appendChild(c);
+  appIndex++;
+  updateAppHeaders();
+}
+
+function removeApp(btn) {
+  btn.parentElement.remove();
+  const totalApps = document.querySelectorAll('.app-container').length;
+  if (totalApps === 0) {
+    appIndex = 0;
+  }
+  updateAppHeaders();
+}
+
+function updateAppHeaders() {
+  const apps = document.querySelectorAll('.app-container');
+  apps.forEach((app, i) => {
+    const header = app.querySelector('h3');
+    if (header) header.textContent = `App ${i + 1}`;
+  });
+}
+
 
 
     function addProcesador(btn) {
