@@ -76,7 +76,8 @@ exports.handler = async (event) => {
         currency,
         carrier: p.carrier,
         carriers: globalCarriers,
-        ...JSON.parse(JSON.stringify(camposCombinados))
+        ...JSON.parse(JSON.stringify(camposCombinados)),
+        ...(tipo_integracion === 'PCI' ? { is_pci: true } : {}) // ⬅️ Aquí se agrega el campo condicionalmente
       };
 
       const res = await fetch(`${CCAPI_URL}/v3/application`, {
@@ -99,7 +100,6 @@ exports.handler = async (event) => {
         createdApps[integrationCode] = json;
       }
     }
-
 
     let noccapiResponse = null;
     const serverCode = tipo_integracion === 'SERVER/CLIENT' ? `${code}-SERVER` : integrations[0];
