@@ -58,48 +58,72 @@ exports.handler = async (event) => {
     }));
 
     for (const integrationCode of integrations) {
-      const p = procesadores[0];
+  const p = procesadores[0];
 
-      // Combinar campos dinámicos y fijos si existen
-      const camposCombinados = {
-        ...(p.fijos || {}),
-        ...(p.campos || {})
-      };
+  // Si el único procesador es PSE, salta la llamada a CCAPI
+  if (procesadores.length === 1 && p.carrier === 'PSE') {
+    responses.push({
+      integrationCode,
+      procesador: p.tipo,
+      status: 200,
+      response: 'Procesador PSE: solo enviado a NOCCAPI, sin crear en CCAPI'
+    });
+    createdApps[integrationCode] = {
+      code: integrationCode,
+      key: p.campos?.secret_key || 'dummy-key'
+    };
+    continue;
+  }
 
-      const appPayload = {
-        name,
-        code: integrationCode,
-        owner_name,
-        callback_url,
-        use_ccapi_announce,
-        http_notifications_enabled,
-        currency,
-        carrier: p.carrier,
-        carriers: globalCarriers,
-        ...JSON.parse(JSON.stringify(camposCombinados)),
-        ...(tipo_integracion === 'PCI' ? { is_pci: true } : {}) // ⬅️ Aquí se agrega el campo condicionalmente
-      };
+  const camposCombinados = {
+    ...(p.fijos || {}),
+    ...(p.campos || {})
+  };
 
-      const res = await fetch(`${CCAPI_URL}/v3/application`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(appPayload)
-      });
+  if (p.tipo === 'RB') {
+    camposCombinados.merchant_id = camposCombinados.rb_idAdquiriente;
+    camposCombinados.terminal_id = camposCombinados.rb_idTerminal;
+  }
 
-      let json;
-      try {
-        json = await res.json();
-      } catch {
-        const t = await res.text();
-        json = { error: 'Respuesta no JSON', detalle: t };
-      }
+  if (p.tipo === 'CBCO') {
+    camposCombinados.cb_unique_code = camposCombinados.cb_commerce_id;
+  }
 
-      responses.push({ integrationCode, procesador: p.tipo, status: res.status, response: json });
+  const appPayload = {
+    name,
+    code: integrationCode,
+    owner_name,
+    callback_url,
+    use_ccapi_announce,
+    http_notifications_enabled,
+    currency,
+    carrier: p.carrier,
+    carriers: globalCarriers,
+    ...JSON.parse(JSON.stringify(camposCombinados)),
+    ...(tipo_integracion === 'PCI' ? { is_pci: true } : {})
+  };
 
-      if (res.ok) {
-        createdApps[integrationCode] = json;
-      }
-    }
+  const res = await fetch(`${CCAPI_URL}/v3/application`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(appPayload)
+  });
+
+  let json;
+  try {
+    json = await res.json();
+  } catch {
+    const t = await res.text();
+    json = { error: 'Respuesta no JSON', detalle: t };
+  }
+
+  responses.push({ integrationCode, procesador: p.tipo, status: res.status, response: json });
+
+  if (res.ok) {
+    createdApps[integrationCode] = json;
+  }
+}
+
 
     let noccapiResponse = null;
     const serverCode = tipo_integracion === 'SERVER/CLIENT' ? `${code}-SERVER` : integrations[0];
@@ -130,30 +154,36 @@ exports.handler = async (event) => {
         min_amount: 1
       };
 
-      const carriers = procesadores.some(p => p.carrier === 'PSE')
-        ? [
-            {
-              carrier: 'PSE',
-              commerce_id: campos_extras?.pse_commerce_id || '',
-              terminal_id: campos_extras?.pse_terminal_id || '',
-              country_default: 'COL',
-              agreement: {
-                ciiu: campos_extras?.beneficiaryEntityCIIUCategory || '',
-                is_v2: true,
-                beneficiaryData: {
-                  beneficiaryEntityName: campos_extras?.beneficiaryEntityName || '',
-                  beneficiaryEntityCIIUCategory: campos_extras?.beneficiaryEntityCIIUCategory || '',
-                  beneficiaryEntityIdentification: campos_extras?.beneficiaryEntityIdentification || '',
-                  beneficiaryEntityIdentificationType: campos_extras?.beneficiaryEntityIdentificationType || ''
-                }
-              },
-              currency_default: 'COP',
-              max_amount: 1000000000,
-              min_amount: 1
-            },
-            ...(tipo_integracion === 'SERVER/CLIENT' ? [ccapiCarrier] : [])
-          ]
-        : [ccapiCarrier];
+      let carriers = [];
+
+      if (procesadores.some(p => p.carrier === 'PSE')) {
+        carriers.push({
+          carrier: 'PSE',
+          commerce_id: campos_extras?.pse_commerce_id || '',
+          terminal_id: campos_extras?.pse_terminal_id || '',
+          country_default: 'COL',
+          agreement: {
+            ciiu: campos_extras?.beneficiaryEntityCIIUCategory || '',
+            is_v2: true,
+            beneficiaryData: {
+              beneficiaryEntityName: campos_extras?.beneficiaryEntityName || '',
+              beneficiaryEntityCIIUCategory: campos_extras?.beneficiaryEntityCIIUCategory || '',
+              beneficiaryEntityIdentification: campos_extras?.beneficiaryEntityIdentification || '',
+              beneficiaryEntityIdentificationType: campos_extras?.beneficiaryEntityIdentificationType || ''
+            }
+          },
+          currency_default: 'COP',
+          max_amount: 1000000000,
+          min_amount: 1
+        });
+
+        if (tipo_integracion === 'SERVER/CLIENT' && procesadores.length > 1) {
+          carriers.push(ccapiCarrier);
+        }
+      } else {
+        carriers = [ccapiCarrier];
+      }
+
 
       const noccapiBody = {
         code: serverData.code,
