@@ -47,9 +47,32 @@ body {
   flex-wrap: wrap;
 }
 
+/*
 .form-section, .log-section {
   flex: 1;
   width: 50%;
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+}
+*/
+.form-section {
+  flex: 2;
+  width: 66%;
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.log-section {
+  flex: 1;
+  width: 33%;
   background: #fff;
   border-radius: 14px;
   padding: 20px;
@@ -315,7 +338,7 @@ function updateAppHeaders() {
           body: JSON.stringify(payload)
         });
         const data = await resp.json();
-        log.textContent += `App ${payload.code} → ${JSON.stringify(data, null, 2)}\n\n`;
+        log.innerHTML += `<div><strong>App ${payload.code}</strong> → <pre>${JSON.stringify(data, null, 2)}</pre></div><hr>`;
       }
     }
 
