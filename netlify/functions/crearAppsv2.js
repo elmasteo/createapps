@@ -49,13 +49,15 @@ exports.handler = async (event) => {
     const responses = [];
     const createdApps = {};
 
-    const globalCarriers = procesadores.map(p => ({
-      carrier: p.carrier,
-      prefix: p.tipo,
-      max: 100000000.0,
-      min: 1.0,
-      order: 1
-    }));
+    const globalCarriers = procesadores
+      .filter(p => p.carrier !== 'PSE')  // ⛔️ No enviar PSE a CCAPI
+      .map(p => ({
+        carrier: p.carrier,
+        prefix: p.tipo,
+        max: 100000000.0,
+        min: 1.0,
+        order: 1
+      }));
 
     for (const integrationCode of integrations) {
   const p = procesadores[0];
