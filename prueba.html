@@ -214,11 +214,14 @@ async function init() {
   const input = document.createElement("input");
   input.type = "password";
   input.placeholder = "🔒 Ingresa tu clave";
-  input.style.padding = "10px";
+  input.style.padding = "12px 16px";
   input.style.fontSize = "16px";
-  input.style.borderRadius = "5px";
+  input.style.borderRadius = "6px";
   input.style.border = "1px solid #ccc";
-  input.style.marginBottom = "10px";
+  input.style.marginBottom = "15px";
+  input.style.width = "280px";
+  input.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
+  input.style.outline = "none";
 
   const btn = document.createElement("button");
   btn.textContent = "Acceder";
@@ -227,6 +230,19 @@ async function init() {
   btn.style.border = "none";
   btn.style.borderRadius = "5px";
   btn.style.cursor = "pointer";
+  btn.style.backgroundColor = "#4CAF50";
+  btn.style.color = "white";
+  btn.style.padding = "10px 24px";
+  btn.style.fontSize = "16px";
+  btn.style.border = "none";
+  btn.style.borderRadius = "6px";
+  btn.style.cursor = "pointer";
+  btn.style.boxShadow = "0 2px 6px rgba(0,0,0,0.2)";
+  btn.style.transition = "background 0.3s";
+
+btn.onmouseenter = () => btn.style.backgroundColor = "#45a049";
+btn.onmouseleave = () => btn.style.backgroundColor = "#4CAF50";
+
 
   btn.onclick = () => {
     const val = input.value;
@@ -257,7 +273,7 @@ async function init() {
 }
 
 init();
-  
+
 let appIndex = 0;
 
 function addApp() {
