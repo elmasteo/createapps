@@ -158,11 +158,15 @@ exports.handler = async (event) => {
 
       let carriers = [];
 
-      if (procesadores.some(p => p.carrier === 'PSE')) {
+      const pseEnabled = procesadores.some(p => p.carrier === 'PSE');
+      const pseCommerceId = campos_extras?.pse_commerce_id?.trim();
+      const pseTerminalId = campos_extras?.pse_terminal_id?.trim();
+
+      if (pseEnabled && pseCommerceId && pseTerminalId) {
         carriers.push({
           carrier: 'PSE',
-          commerce_id: campos_extras?.pse_commerce_id || '',
-          terminal_id: campos_extras?.pse_terminal_id || '',
+          commerce_id: pseCommerceId,
+          terminal_id: pseTerminalId,
           country_default: 'COL',
           agreement: {
             ciiu: campos_extras?.beneficiaryEntityCIIUCategory || '',
@@ -182,10 +186,7 @@ exports.handler = async (event) => {
         if (tipo_integracion === 'SERVER/CLIENT' && procesadores.length > 1) {
           carriers.push(ccapiCarrier);
         }
-      } else {
-        carriers = [ccapiCarrier];
       }
-
 
       const noccapiBody = {
         code: serverData.code,
