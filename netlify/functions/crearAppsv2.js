@@ -141,75 +141,72 @@ exports.handler = async (event) => {
       const uniq = CryptoJS.SHA256(app_key + unixtime).toString();
       const tokenStr = Buffer.from(`${app_code};${unixtime};${uniq}`).toString('base64');
 
-      const carriers_noccapi = [];
+      const hasOnlyPSE = procesadores.every(p => p.carrier === 'PSE');
+const hasCardProcessor = procesadores.some(p => p.carrier === 'ccapi');
 
-      const pseEnabled = procesadores.some(p => p.carrier === 'PSE');
-      const pseCommerceId = campos_extras?.pse_commerce_id?.trim();
-      const pseTerminalId = campos_extras?.pse_terminal_id?.trim();
+const carriers_noccapi = [];
 
-      if (pseEnabled && pseCommerceId && pseTerminalId) {
-        carriers_noccapi.push({
-          carrier: 'PSE',
-          commerce_id: pseCommerceId,
-          terminal_id: pseTerminalId,
-          country_default: 'COL',
-          agreement: {
-            ciiu: campos_extras?.beneficiaryEntityCIIUCategory || '',
-            is_v2: true,
-            beneficiaryData: {
-              beneficiaryEntityName: campos_extras?.beneficiaryEntityName || '',
-              beneficiaryEntityCIIUCategory: campos_extras?.beneficiaryEntityCIIUCategory || '',
-              beneficiaryEntityIdentification: campos_extras?.beneficiaryEntityIdentification || '',
-              beneficiaryEntityIdentificationType: campos_extras?.beneficiaryEntityIdentificationType || ''
-            }
-          },
-          currency_default: 'COP',
-          max_amount: 1000000000,
-          min_amount: 1
-        });
+if (pseEnabled && pseCommerceId && pseTerminalId) {
+  carriers_noccapi.push({
+    carrier: 'PSE',
+    commerce_id: pseCommerceId,
+    terminal_id: pseTerminalId,
+    country_default: 'COL',
+    agreement: {
+      ciiu: campos_extras?.beneficiaryEntityCIIUCategory || '',
+      is_v2: true,
+      beneficiaryData: {
+        beneficiaryEntityName: campos_extras?.beneficiaryEntityName || '',
+        beneficiaryEntityCIIUCategory: campos_extras?.beneficiaryEntityCIIUCategory || '',
+        beneficiaryEntityIdentification: campos_extras?.beneficiaryEntityIdentification || '',
+        beneficiaryEntityIdentificationType: campos_extras?.beneficiaryEntityIdentificationType || ''
       }
+    },
+    currency_default: 'COP',
+    max_amount: 1000000000,
+    min_amount: 1
+  });
+}
 
-      const hasCardProcessor = procesadores.some(p => p.carrier === 'ccapi');
-      const carriers_ccapi = [];
+if (!hasOnlyPSE && (hasCardProcessor || tipo_integracion === 'PCI' || tipo_integracion === 'LTP')) {
+  const codeForCards = (tipo_integracion === 'PCI' || tipo_integracion === 'LTP')
+    ? serverData.code
+    : createdApps[`${code}-CLIENT`]?.code || '';
 
-      if (hasCardProcessor || tipo_integracion === 'PCI' || tipo_integracion === 'LTP') {
-        const codeForCards = tipo_integracion === 'PCI' || tipo_integracion === 'LTP'
-          ? serverData.code
-          : createdApps[`${code}-CLIENT`]?.code || '';
+  const keyForCards = (tipo_integracion === 'PCI' || tipo_integracion === 'LTP')
+    ? serverData.key
+    : createdApps[`${code}-CLIENT`]?.key || '';
 
-        const keyForCards = tipo_integracion === 'PCI' || tipo_integracion === 'LTP'
-          ? serverData.key
-          : createdApps[`${code}-CLIENT`]?.key || '';
+  if (codeForCards && keyForCards) {
+    carriers_noccapi.push({
+      carrier: 'ccapi',
+      commerce_id: codeForCards,
+      terminal_id: keyForCards,
+      country_default: 'COL',
+      currency_default: currency,
+      agreement: {},
+      max_amount: 1000000000,
+      min_amount: 1
+    });
+  }
+}
 
-        carriers_noccapi.push({
-          carrier: 'ccapi',
-          commerce_id: codeForCards,
-          terminal_id: keyForCards,
-          country_default: 'COL',
-          currency_default: currency,
-          agreement: {},
-          max_amount: 1000000000,
-          min_amount: 1
-        });
-      }
-
-
-      const noccapiBody = {
-      code: serverData.code,
-      secret_key: serverData.key,
-      owner: owner_name,
-      currencies_allowed: [currency],
-      whitelabel_owner: 'Paymentez',
-      sms_notification: false,
-      link_to_pay_data: {
-        checkout_url: 'https://paymentez.link',
-        link_to_pay_config: {}
-      },
-      carriers: {
-        noccapi: carriers_noccapi,
-        ccapi: [{}]
-      }
-    };
+const noccapiBody = {
+  code: serverData.code,
+  secret_key: serverData.key,
+  owner: owner_name,
+  currencies_allowed: [currency],
+  whitelabel_owner: 'Paymentez',
+  sms_notification: false,
+  link_to_pay_data: {
+    checkout_url: 'https://paymentez.link',
+    link_to_pay_config: {}
+  },
+  carriers: {
+    noccapi: carriers_noccapi,
+    ccapi: hasOnlyPSE ? [] : [{}]
+  }
+};
 
 
       console.log('📤 Payload NOCCAPI:', JSON.stringify(noccapiBody, null, 2));
