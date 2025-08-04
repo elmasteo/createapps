@@ -45,6 +45,7 @@ window.procesadoresConfig = {
   },
   PSE: {
   carrier: "PSE",
+  usa_noccapi: true,
   campos: {
     pse_commerce_id: { tipo: 'texto', label: 'Commerce ID' },
     pse_terminal_id: { tipo: 'texto', label: 'Terminal ID' },
