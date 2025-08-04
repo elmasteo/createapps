@@ -148,6 +148,14 @@ const pseEnabled = procesadores.some(p => p.carrier === 'PSE');
 const pseCommerceId = campos_extras?.pse_commerce_id?.trim();
 const pseTerminalId = campos_extras?.pse_terminal_id?.trim();
 
+console.log('🧪 pseEnabled:', pseEnabled);
+console.log('🧪 pseCommerceId:', pseCommerceId);
+console.log('🧪 pseTerminalId:', pseTerminalId);
+console.log('🧪 hasCardProcessor:', hasCardProcessor);
+console.log('🧪 tipo_integracion:', tipo_integracion);
+
+
+
 const carriers_noccapi = [];
 
 if (pseEnabled && pseCommerceId && pseTerminalId) {
@@ -195,6 +203,8 @@ if (!hasOnlyPSE && (hasCardProcessor || tipo_integracion === 'PCI' || tipo_integ
   }
 }
 
+console.log('🧪 carriers_noccapi:', JSON.stringify(carriers_noccapi, null, 2));
+
 const noccapiBody = {
   code: serverData.code,
   secret_key: serverData.key,
@@ -231,10 +241,10 @@ const noccapiBody = {
       };
     }
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ results: responses, noccapiResponse })
-    };
+      return {
+    statusCode: 200,
+    body: JSON.stringify({ results: responses, noccapiResponse, debug: { carriers_noccapi } })
+  };
 
   } catch (e) {
     return {
