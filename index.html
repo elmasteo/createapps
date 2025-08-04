@@ -102,12 +102,10 @@ async function enviarApps() {
       });
 
       const config = window.procesadoresConfig?.[tipo] || {};
-      const fijos = config.fijos || {};
-
-      // Unificar campos fijos y dinámicos
+      const fijos = structuredClone(config.fijos || {});
       const campos = { ...fijos, ...valores };
 
-      // Ajustes especiales por tipo
+      // Asignaciones especiales (sobre campos combinados)
       if (tipo === 'RB') {
         campos['merchant_id'] = valores['rb_idAdquiriente'];
         campos['terminal_id'] = valores['rb_idTerminal'];
