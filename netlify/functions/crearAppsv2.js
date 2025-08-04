@@ -77,15 +77,8 @@ exports.handler = async (event) => {
 
         const campos = { ...(p.campos || {}) };
 
-        if (p.tipo === 'RB') {
-          campos['merchant_id'] = campos['rb_idAdquiriente'];
-          campos['terminal_id'] = campos['rb_idTerminal'];
-        }
-
         if (p.tipo === 'CBCO') {
           campos['cb_commerce_id'] = campos['cb_commerce_id'];
-          campos['merchant_id'] = campos['cb_commerce_id'];
-          campos['terminal_id'] = campos['cb_terminal_code'];
         }
 
         Object.assign(camposApp, campos);
