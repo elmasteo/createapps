@@ -113,11 +113,18 @@ exports.handler = async (event) => {
         const t = await res.text();
         json = { error: 'Respuesta no JSON', detalle: t };
       }
-
+/*
       responses.push({
         integrationCode,
         procesador: 'multi',
         request: appPayload,
+        status: res.status,
+        response: json
+      });
+*/
+
+      responses.push({
+        integrationCode,
         status: res.status,
         response: json
       });
@@ -232,7 +239,7 @@ exports.handler = async (event) => {
       });
 
       const noaJson = await noa.json().catch(async () => ({ error: await noa.text() }));
-
+/*
       noccapiResponse = {
         payload: noccapiBody,
         response: noaJson
@@ -243,6 +250,18 @@ exports.handler = async (event) => {
       statusCode: 200,
       body: JSON.stringify({ results: responses, noccapiResponse, debug: { carriers_noccapi } })
     };
+*/
+
+      noccapiResponse = {
+        response: noaJson
+      };
+    }
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ results: responses, noccapiResponse })
+    };
+
 
   } catch (e) {
     return {
