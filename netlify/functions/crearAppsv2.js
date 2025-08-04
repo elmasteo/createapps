@@ -75,10 +75,26 @@ exports.handler = async (event) => {
       continue;
     }
 
+        // 1. Combina campos dinámicos (campos) con valores del front
+    const camposDinamicos = { ...(p.campos || {}) };
+    for (const [key, meta] of Object.entries(camposDinamicos)) {
+      camposDinamicos[key] = campos_extras?.[key] ?? meta;
+    }
+
+    // 2. Agrega campos fijos (valores literales que no vienen del front)
+    const camposFijos = {};
+    if (p.fijos) {
+      for (const [k, v] of Object.entries(p.fijos)) {
+        camposFijos[k] = v;
+      }
+    }
+
+    // 3. Unifica todos los campos para la app
     const camposCombinados = {
-      ...(p.fijos || {}),
-      ...(p.campos || {})
+      ...camposFijos,
+      ...camposDinamicos
     };
+
 
     // Reutilizar valores
     if (p.tipo === 'RB') {
