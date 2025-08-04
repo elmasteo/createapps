@@ -73,96 +73,94 @@
       camposDiv.appendChild(pair);
     }
 
-    async function enviarApps() {
-      const apps = document.querySelectorAll('.app-container');
-      const log = document.getElementById('log');
-      log.textContent = 'Procesando...\n';
+async function enviarApps() {
+  const apps = document.querySelectorAll('.app-container');
+  const log = document.getElementById('log');
+  log.textContent = 'Procesando...\n';
 
-      for (const app of apps) {
-        const procesadores = [];
-        const procContainers = app.querySelectorAll('.proc-container');
-        for (const proc of procContainers) {
-          const tipo = proc.querySelector('[name="tipo"]').value;
-          const carrier = parseInt(proc.querySelector('[name="carrier"]').value);
-          const campos = {};
-          proc.querySelectorAll('.field-pair').forEach(pair => {
-            const key = pair.children[0].value.trim();
-            const value = pair.children[1].value.trim();
-            if (key) {
-              if (value.toLowerCase() === "true") {
-                campos[key] = true;
-              } else if (value.toLowerCase() === "false") {
-                campos[key] = false;
-              } else if (!isNaN(value) && !/^0[0-9]/.test(value)) {
-                campos[key] = Number(value);
-              } else {
-                campos[key] = value; // mantener como string si empieza con 0 o no es número
-              }
-            }
-
-          });
-          const config = window.procesadoresConfig?.[tipo] || {};
-          const fijos = config.fijos || {};
-
-          procesadores.push({ tipo, carrier, valores: campos, fijos });
-
+  for (const app of apps) {
+    const procesadores = [];
+    const procContainers = app.querySelectorAll('.proc-container');
+    for (const proc of procContainers) {
+      const tipo = proc.querySelector('[name="tipo"]').value;
+      const carrier = proc.querySelector('[name="carrier"]').value;
+      const valores = {};
+      proc.querySelectorAll('.field-pair').forEach(pair => {
+        const key = pair.children[0].value.trim();
+        const value = pair.children[1].value.trim();
+        if (key) {
+          if (value.toLowerCase() === "true") {
+            valores[key] = true;
+          } else if (value.toLowerCase() === "false") {
+            valores[key] = false;
+          } else if (!isNaN(value) && !/^0[0-9]/.test(value)) {
+            valores[key] = Number(value);
+          } else {
+            valores[key] = value;
+          }
         }
+      });
 
-        const payload = {
-          code: app.querySelector('[name="code"]').value,
-          name: app.querySelector('[name="owner_name"]').value,
-          owner_name: app.querySelector('[name="owner_name"]').value,
-          callback_url: app.querySelector('[name="callback_url"]').value,
-          currency: app.querySelector('[name="currency"]').value,
-          tipo_integracion: app.querySelector('[name="tipo_integracion"]').value,
-          use_ccapi_announce: true,
-          http_notifications_enabled: true,
-          procesadores
-        };
+      const config = window.procesadoresConfig?.[tipo] || {};
+      const fijos = config.fijos || {};
 
-        try {
-          const payloadEnriquecido = {
-            ...payload,
-            procesadores: payload.procesadores.map(p => {
-              const config = window.procesadoresConfig?.[p.tipo] || {};
-              const fijos = config.fijos || {};
-              const camposCombinados = { ...fijos, ...p.valores };
+      // Unificar campos fijos y dinámicos
+      const campos = { ...fijos, ...valores };
 
-              // Añadir campos derivados según el tipo
-              if (p.tipo === 'RB') {
-                camposCombinados['merchant_id'] = p.valores['rb_idAdquiriente'];
-                camposCombinados['terminal_id'] = p.valores['rb_idTerminal'];
-              }
-
-              if (p.tipo === 'CBCO') {
-                camposCombinados['cb_commerce_id'] = p.valores['cb_commerce_id'];
-                camposCombinados['merchant_id'] = p.valores['cb_commerce_id'];
-                camposCombinados['terminal_id'] = p.valores['cb_terminal_code'];
-              }
-
-              return {
-                tipo: p.tipo,
-                carrier: p.carrier,
-                campos: camposCombinados
-              };
-            })
-          };
-
-          const res = await fetch('/.netlify/functions/createAppsv2', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payloadEnriquecido)
-          });
-
-          const data = await res.json();
-          log.textContent += `Resultado para "${payload.code}":\n${JSON.stringify(data, null, 2)}\n\n`;
-
-        } catch (e) {
-          log.textContent += `Error procesando "${payload.code}": ${e.message}\n`;
-        }
-
+      // Ajustes especiales por tipo
+      if (tipo === 'RB') {
+        campos['merchant_id'] = valores['rb_idAdquiriente'];
+        campos['terminal_id'] = valores['rb_idTerminal'];
       }
+      if (tipo === 'CBCO') {
+        campos['cb_commerce_id'] = valores['cb_commerce_id'];
+        campos['merchant_id'] = valores['cb_commerce_id'];
+        campos['terminal_id'] = valores['cb_terminal_code'];
+      }
+
+      procesadores.push({ tipo, carrier, campos });
     }
+
+    const camposExtras = {};
+    procesadores.forEach(p => {
+      if (p.tipo === 'PSE') {
+        camposExtras.pse_commerce_id = p.campos.pse_commerce_id;
+        camposExtras.pse_terminal_id = p.campos.pse_terminal_id;
+        camposExtras.beneficiaryEntityName = p.campos.beneficiaryEntityName;
+        camposExtras.beneficiaryEntityCIIUCategory = p.campos.beneficiaryEntityCIIUCategory;
+        camposExtras.beneficiaryEntityIdentification = p.campos.beneficiaryEntityIdentification;
+        camposExtras.beneficiaryEntityIdentificationType = p.campos.beneficiaryEntityIdentificationType;
+      }
+    });
+
+    const payload = {
+      code: app.querySelector('[name="code"]').value,
+      name: app.querySelector('[name="owner_name"]').value,
+      owner_name: app.querySelector('[name="owner_name"]').value,
+      callback_url: app.querySelector('[name="callback_url"]').value,
+      currency: app.querySelector('[name="currency"]').value,
+      tipo_integracion: app.querySelector('[name="tipo_integracion"]').value,
+      use_ccapi_announce: true,
+      http_notifications_enabled: true,
+      procesadores,
+      campos_extras: camposExtras
+    };
+
+    try {
+      const res = await fetch('/.netlify/functions/createAppsv2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      log.textContent += `Resultado para "${payload.code}":\n${JSON.stringify(data, null, 2)}\n\n`;
+    } catch (e) {
+      log.textContent += `Error procesando "${payload.code}": ${e.message}\n`;
+    }
+  }
+}
+
   </script>
 </body>
 </html>

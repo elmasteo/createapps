@@ -75,14 +75,9 @@ exports.handler = async (event) => {
           continue;
         }
 
-        const camposDinamicos = p.valores || {};
-        const camposFijos = {};
+        const campos = p.campos || {};
+        Object.assign(camposApp, campos);
 
-        if (p.fijos) {
-          for (const [key, value] of Object.entries(p.fijos)) {
-            camposFijos[key] = value;
-          }
-        }
 
         if (p.tipo === 'RB') {
           camposFijos['merchant_id'] = camposDinamicos['rb_idAdquiriente'];
