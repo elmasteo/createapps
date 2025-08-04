@@ -47,8 +47,8 @@ window.procesadoresConfig = {
   carrier: "PSE",
   usa_noccapi: true,
   campos: {
-    pse_commerce_id: { tipo: 'texto', label: 'Commerce ID' },
-    pse_terminal_id: { tipo: 'texto', label: 'Terminal ID' },
+    commerce_id: { tipo: 'texto', label: 'Commerce ID' },
+    terminal_id: { tipo: 'texto', label: 'Terminal ID' },
     beneficiaryEntityName: { tipo: 'texto', label: 'Nombre Beneficiario' },
     beneficiaryEntityCIIUCategory: { tipo: 'texto', label: 'Categoría CIIU Beneficiario' },
     beneficiaryEntityIdentification: { tipo: 'texto', label: 'Documento Beneficiario' },
