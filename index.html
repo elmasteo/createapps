@@ -1,164 +1,433 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Generador de Apps</title>
+  <link rel="icon" href="https://docs.nuvei.com/wp-content/themes/manual-child/img/favicons/cropped-favicon-nuvei-32x32.png" sizes="32x32">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    body { font-family: sans-serif; margin: 20px; }
-    .app-container, .proc-container { border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; }
-    .log { background: #f5f5f5; padding: 10px; white-space: pre-wrap; height: 300px; overflow-y: auto; border: 1px solid #ccc; }
-    .field-pair { display: flex; gap: 10px; margin-bottom: 5px; }
-    .field-pair input { width: 45%; }
-    button { margin-top: 5px; }
-  </style>
-</head>
-<body>
-  <h1>Generador de Apps</h1>
+    * {
+  box-sizing: border-box;
+}
 
-  <div id="apps"></div>
-  <button onclick="addApp()">Agregar App</button>
-  <button onclick="enviarApps()">Enviar Todo</button>
+body {
+  font-family: 'Inter', sans-serif;
+  background: #e9ecef;
+  padding: 40px 20px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-  <h2>Logs</h2>
-  <div id="log" class="log"></div>
+.wrapper {
+  max-width: 1200px;
+  width: 100%;
+}
 
-  <script>
-    let appIndex = 0;
+.logo-wrapper {
+  text-align: center;
+  margin-bottom: 20px;
+}
 
-    function addApp() {
-      const container = document.createElement('div');
-      container.className = 'app-container';
-      container.innerHTML = `
-        <h3>App ${appIndex + 1}</h3>
-        Código: <input name="code"><br>
-        Owner: <input name="owner_name"><br>
-        Callback URL: <input name="callback_url"><br>
-        Moneda: <input name="currency" value="COP"><br>
-        Tipo de integración: 
-        <select name="tipo_integracion">
-          <option value="SERVER/CLIENT">SERVER/CLIENT</option>
-          <option value="PCI">PCI</option>
-          <option value="LTP">LTP</option>
-        </select><br><br>
-        <div class="procesadores"></div>
-        <button type="button" onclick="addProcesador(this)">+ Procesador</button>
-      `;
-      document.getElementById('apps').appendChild(container);
-      appIndex++;
-    }
+.logo-wrapper img {
+  max-width: 180px;
+  height: auto;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
 
-    function addProcesador(btn) {
-      const contenedor = btn.previousElementSibling;
-      const proc = document.createElement('div');
-      proc.className = 'proc-container';
-      proc.innerHTML = `
-        Tipo procesador: <input name="tipo"><br>
-        Carrier ID: <input name="carrier" type="number"><br>
-        <div class="campos"></div>
-        <button type="button" onclick="addCampo(this)">+ Campo</button>
-        <button type="button" onclick="this.parentElement.remove()">Eliminar Procesador</button>
-      `;
-      contenedor.appendChild(proc);
-    }
+.container {
+  width: 100%;
+  background: #fff;
+  padding: 24px;
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
 
-    function addCampo(btn) {
-      const camposDiv = btn.previousElementSibling;
-      const pair = document.createElement('div');
-      pair.className = 'field-pair';
-      pair.innerHTML = `
-        <input placeholder="Nombre del campo">
-        <input placeholder="Valor del campo">
-        <button onclick="this.parentElement.remove()">❌</button>
-      `;
-      camposDiv.appendChild(pair);
-    }
+.form-section {
+  width: 100%;
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+}
 
-async function enviarApps() {
-  const apps = document.querySelectorAll('.app-container');
-  const log = document.getElementById('log');
-  log.textContent = 'Procesando...\n';
+.log-section {
+  width: 100%;
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+}
 
-  for (const app of apps) {
-    const procesadores = [];
-    const procContainers = app.querySelectorAll('.proc-container');
-    for (const proc of procContainers) {
-      const tipo = proc.querySelector('[name="tipo"]').value;
-      const carrier = proc.querySelector('[name="carrier"]').value;
-      const valores = {};
-      proc.querySelectorAll('.field-pair').forEach(pair => {
-        const key = pair.children[0].value.trim();
-        const value = pair.children[1].value.trim();
-        if (key) {
-          if (value.toLowerCase() === "true") {
-            valores[key] = true;
-          } else if (value.toLowerCase() === "false") {
-            valores[key] = false;
-          } else if (!isNaN(value) && !/^0[0-9]/.test(value)) {
-            valores[key] = Number(value);
-          } else {
-            valores[key] = value;
-          }
-        }
-      });
+h1, h2, h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #212529;
+}
 
-      const config = window.procesadoresConfig?.[tipo] || {};
-      const fijos = structuredClone(config.fijos || {});
-      const campos = { ...fijos, ...valores };
+label {
+  display: block;
+  margin-top: 14px;
+  font-weight: 600;
+  color: #495057;
+  font-size: 14px;
+}
 
-      // Asignaciones especiales (sobre campos combinados)
-      if (tipo === 'RB') {
-        campos['merchant_id'] = valores['rb_idAdquiriente'];
-        campos['terminal_id'] = valores['rb_idTerminal'];
-      }
-      if (tipo === 'CBCO') {
-        campos['cb_commerce_id'] = valores['cb_commerce_id'];
-        campos['merchant_id'] = valores['cb_commerce_id'];
-        campos['terminal_id'] = valores['cb_terminal_code'];
-      }
+input, select {
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 5px;
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #f8f9fa;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
 
-      procesadores.push({ tipo, carrier, campos });
-    }
+input:focus, select:focus {
+  outline: none;
+  border-color: #339af0;
+  box-shadow: 0 0 0 2px rgba(51,154,240,0.2);
+  background: #fff;
+}
 
-    const camposExtras = {};
-    procesadores.forEach(p => {
-      if (p.tipo === 'PSE') {
-        camposExtras.pse_commerce_id = p.campos.pse_commerce_id;
-        camposExtras.pse_terminal_id = p.campos.pse_terminal_id;
-        camposExtras.beneficiaryEntityName = p.campos.beneficiaryEntityName;
-        camposExtras.beneficiaryEntityCIIUCategory = p.campos.beneficiaryEntityCIIUCategory;
-        camposExtras.beneficiaryEntityIdentification = p.campos.beneficiaryEntityIdentification;
-        camposExtras.beneficiaryEntityIdentificationType = p.campos.beneficiaryEntityIdentificationType;
-      }
-    });
+button {
+  padding: 12px;
+  background: #081f2c;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  margin-top: 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
 
-    const payload = {
-      code: app.querySelector('[name="code"]').value,
-      name: app.querySelector('[name="owner_name"]').value,
-      owner_name: app.querySelector('[name="owner_name"]').value,
-      callback_url: app.querySelector('[name="callback_url"]').value,
-      currency: app.querySelector('[name="currency"]').value,
-      tipo_integracion: app.querySelector('[name="tipo_integracion"]').value,
-      use_ccapi_announce: true,
-      http_notifications_enabled: true,
-      procesadores,
-      campos_extras: camposExtras
-    };
+button:hover {
+  background: #175b81;
+}
 
-    try {
-      const res = await fetch('/.netlify/functions/createAppsv2', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+.log {
+  background: #111;
+  color: #39ff14;
+  padding: 12px;
+  font-family: monospace;
+  height: 100%;
+  overflow-y: auto;
+  border-radius: 8px;
+  font-size: 13px;
+  border: 1px solid #333;
+  flex-grow: 1;
+}
 
-      const data = await res.json();
-      log.textContent += `Resultado para "${payload.code}":\n${JSON.stringify(data, null, 2)}\n\n`;
-    } catch (e) {
-      log.textContent += `Error procesando "${payload.code}": ${e.message}\n`;
-    }
+.app-container {
+  position: relative;
+  border: 1px solid #dee2e6;
+  padding: 14px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+.proc-container {
+  border: 1px solid #dee2e6;
+  padding: 14px;
+  margin-top: 10px;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.remove-app {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: #dc3545;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .log {
+    height: 300px;
   }
 }
 
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="logo-wrapper">
+      <img src="https://cdn.paymentez.com/img/nv/nuvei_logo.png" alt="Nuvei Logo">
+    </div>
+
+    <div class="container">
+      <!-- Panel izquierdo: Formularios -->
+      <div class="form-section">
+        <h1>Generador de Apps</h1>
+        <div id="apps"></div>
+        <button onclick="addApp()">+ Agregar App</button>
+        <button onclick="enviarApps()">Enviar Todo</button>
+      </div>
+
+      <!-- Panel derecho: Log -->
+      <div class="log-section">
+        <h2>Logs</h2>
+        <div id="log" class="log"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+async function init() {
+  const clave = await new Promise(resolve => {
+  const overlay = document.createElement("div");
+  overlay.style.position = "fixed";
+  overlay.style.top = 0;
+  overlay.style.left = 0;
+  overlay.style.width = "100vw";
+  overlay.style.height = "100vh";
+  overlay.style.background = "rgba(0,0,0,0.8)";
+  overlay.style.display = "flex";
+  overlay.style.flexDirection = "column";
+  overlay.style.justifyContent = "center";
+  overlay.style.alignItems = "center";
+  overlay.style.zIndex = 9999;
+
+  const input = document.createElement("input");
+  input.type = "password";
+  input.placeholder = "🔒 Ingresa tu clave";
+  input.style.padding = "12px 16px";
+  input.style.fontSize = "16px";
+  input.style.borderRadius = "6px";
+  input.style.border = "1px solid #ccc";
+  input.style.marginBottom = "15px";
+  input.style.width = "280px";
+  input.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
+  input.style.outline = "none";
+
+  const btn = document.createElement("button");
+  btn.textContent = "Acceder";
+  btn.style.padding = "10px 20px";
+  btn.style.fontSize = "16px";
+  btn.style.border = "none";
+  btn.style.borderRadius = "5px";
+  btn.style.cursor = "pointer";
+  btn.style.backgroundColor = "#4CAF50";
+  btn.style.color = "white";
+  btn.style.padding = "10px 24px";
+  btn.style.fontSize = "16px";
+  btn.style.border = "none";
+  btn.style.borderRadius = "6px";
+  btn.style.cursor = "pointer";
+  btn.style.boxShadow = "0 2px 6px rgba(0,0,0,0.2)";
+  btn.style.transition = "background 0.3s";
+
+btn.onmouseenter = () => btn.style.backgroundColor = "#45a049";
+btn.onmouseleave = () => btn.style.backgroundColor = "#4CAF50";
+
+
+  btn.onclick = () => {
+    const val = input.value;
+    document.body.removeChild(overlay);
+    resolve(val);
+  };
+
+  overlay.appendChild(input);
+  overlay.appendChild(btn);
+  document.body.appendChild(overlay);
+});
+
+
+  const res = await fetch('/.netlify/functions/validarClave', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ clave })
+  });
+
+  const { autorizado } = await res.json();
+
+  if (!autorizado) {
+    alert("Clave incorrecta. Acceso denegado.");
+    document.body.innerHTML = "<h2 style='text-align:center; margin-top:20%'>🚫 Acceso no autorizado</h2>";
+    return;
+  }
+
+}
+
+init();
+
+let appIndex = 0;
+
+function addApp() {
+  const c = document.createElement('div');
+  c.className = 'app-container';
+  c.innerHTML = `
+    <button class="remove-app" onclick="removeApp(this)" title="Eliminar App">×</button>
+    <h3>App ${appIndex + 1}</h3>
+    <label>Código: <input name="code" /></label>
+    <label>Owner: <input name="owner_name" /></label>
+    <label>Callback URL: <input name="callback_url" /></label>
+    <label>Moneda: <input name="currency" value="COP" /></label>
+    <label>Tipo integración:
+      <select name="tipo_integracion">
+        <option value="SERVER/CLIENT">SERVER/CLIENT</option>
+        <option value="PCI">PCI</option>
+        <option value="LTP">LTP</option>
+      </select>
+    </label>
+    <div class="procesadores"></div>
+    <button type="button" onclick="addProcesador(this)">+ Procesador</button>
+  `;
+  document.getElementById('apps').appendChild(c);
+  appIndex++;
+  updateAppHeaders();
+}
+
+function removeApp(btn) {
+  btn.parentElement.remove();
+  const totalApps = document.querySelectorAll('.app-container').length;
+  if (totalApps === 0) {
+    appIndex = 0;
+  }
+  updateAppHeaders();
+}
+
+function updateAppHeaders() {
+  const apps = document.querySelectorAll('.app-container');
+  apps.forEach((app, i) => {
+    const header = app.querySelector('h3');
+    if (header) header.textContent = `App ${i + 1}`;
+  });
+}
+
+
+
+    function addProcesador(btn) {
+      if (!procesadoresConfig) return;
+      const pdiv = document.createElement('div');
+      pdiv.className = 'proc-container';
+      pdiv.innerHTML = `
+        <label>Procesador:
+          <select name="tipo" onchange="renderCampos(this)">
+            ${Object.keys(procesadoresConfig).map(k => `<option>${k}</option>`).join('')}
+          </select>
+        </label>
+        <div class="campos"></div>
+        <button type="button" onclick="this.parentElement.remove()">Eliminar Procesador</button>
+      `;
+      btn.closest('.app-container').querySelector('.procesadores').appendChild(pdiv);
+      const select = pdiv.querySelector('[name="tipo"]');
+      renderCampos(select);
+    }
+
+    function renderCampos(el) {
+      const select = el.tagName === 'SELECT' ? el : el.parentElement.querySelector('[name="tipo"]');
+      const proc = select.closest('.proc-container');
+      const tipo = select.value;
+      const spec = procesadoresConfig[tipo];
+      const div = proc.querySelector('.campos');
+      div.innerHTML = '';
+      Object.entries(spec.campos).forEach(([field, def]) => {
+        const label = def.label || field;
+
+        if (def.valorFijo !== undefined) {
+          const inp = document.createElement('input');
+          inp.type = 'hidden';
+          inp.name = field;
+          inp.value = def.valorFijo;
+          div.appendChild(inp);
+        } else {
+          const lbl = document.createElement('label');
+          lbl.textContent = label;
+          const inp = document.createElement('input');
+          inp.name = field;
+          lbl.appendChild(inp);
+          div.appendChild(lbl);
+        }
+      });
+
+    }
+
+    async function enviarApps() {
+      const log = document.getElementById('log');
+      log.textContent = '';
+      const apps = document.querySelectorAll('.app-container');
+      for (const app of apps) {
+        const ownerName = app.querySelector('[name="name"]')?.value || app.querySelector('[name="owner_name"]').value;
+
+        const payload = {
+          code: app.querySelector('[name="code"]').value,
+          name: ownerName,
+          owner_name: ownerName,
+          callback_url: app.querySelector('[name="callback_url"]').value,
+          currency: app.querySelector('[name="currency"]').value,
+          tipo_integracion: app.querySelector('[name="tipo_integracion"]').value,
+          use_ccapi_announce: true,
+          http_notifications_enabled: true,
+          procesadores: []
+        };
+
+        app.querySelectorAll('.proc-container').forEach(p => {
+        const tipo = p.querySelector('[name="tipo"]').value;
+        const campos = {};
+
+        // Campos visibles del frontend
+        p.querySelectorAll('input').forEach(i => {
+          if (i.name) campos[i.name] = i.value === 'true' ? true : (i.value === 'false' ? false : i.value);
+        });
+
+        // Agregar campos fijos si existen
+        const fijos = procesadoresConfig[tipo].fijos || {};
+        for (const [k, v] of Object.entries(fijos)) {
+          campos[k] = v;
+        }
+
+        // ✅ Incluir carrier_noccapi si es requerido
+        if (procesadoresConfig[tipo].usa_noccapi) {
+          campos.carrier_noccapi = procesadoresConfig[tipo].carrier;
+        }
+
+        payload.procesadores.push({
+          tipo,
+          carrier: procesadoresConfig[tipo].carrier,
+          campos
+        });
+      });
+
+
+        const resp = await fetch('/.netlify/functions/crearAppsv2', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await resp.json();
+        log.innerHTML += `<div><strong>App ${payload.code}</strong> → <pre>${JSON.stringify(data, null, 2)}</pre></div><hr>`;
+      }
+    }
+
+    let procesadoresConfig = null;
+
+    window.onload = function () {
+      procesadoresConfig = window.procesadoresConfig;
+      addApp();
+    };
   </script>
+  <script src="procesadores.js"></script>
 </body>
 </html>
