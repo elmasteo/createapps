@@ -130,30 +130,6 @@ exports.handler = async (event) => {
   }
 }
 
-  console.log('📤 Payload CCAPI:', JSON.stringify(appPayload, null, 2));
-
-  const res = await fetch(`${CCAPI_URL}/v3/application`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(appPayload)
-  });
-
-  let json;
-  try {
-    json = await res.json();
-  } catch {
-    const t = await res.text();
-    json = { error: 'Respuesta no JSON', detalle: t };
-  }
-
-  responses.push({ integrationCode, procesador: p.tipo, request: appPayload, status: res.status, response: json });
-
-  if (res.ok) {
-    createdApps[integrationCode] = json;
-  }
-}
-
-
     let noccapiResponse = null;
     const serverCode = tipo_integracion === 'SERVER/CLIENT' ? `${code}-SERVER` : integrations[0];
     const serverData = createdApps[serverCode];
