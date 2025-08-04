@@ -82,14 +82,16 @@ exports.handler = async (event) => {
     ...(p.campos || {})
   };
 
-  if (p.tipo === 'RB') {
-    camposCombinados.merchant_id = camposCombinados.rb_idAdquiriente;
-    camposCombinados.terminal_id = camposCombinados.rb_idTerminal;
-  }
+if (p.tipo === 'RB') {
+  camposCombinados.merchant_id = camposCombinados.rb_idAdquiriente;
+  camposCombinados.terminal_id = camposCombinados.rb_idTerminal;
+}
 
-  if (p.tipo === 'CBCO') {
-    camposCombinados.cb_unique_code = camposCombinados.cb_commerce_id;
-  }
+if (p.tipo === 'CBCO') {
+  camposCombinados.merchant_id = camposCombinados.cb_commerce_id;
+  camposCombinados.terminal_id = camposCombinados.cb_terminal_code;
+  camposCombinados.cb_commerce_id = camposCombinados.cb_unique_code;
+}
 
   const appPayload = {
     name,
@@ -105,6 +107,8 @@ exports.handler = async (event) => {
     ...(tipo_integracion === 'PCI' ? { is_pci: true } : {})
   };
 
+  console.log('📤 Payload CCAPI:', JSON.stringify(appPayload, null, 2));
+
   const res = await fetch(`${CCAPI_URL}/v3/application`, {
     method: 'POST',
     headers,
@@ -119,7 +123,7 @@ exports.handler = async (event) => {
     json = { error: 'Respuesta no JSON', detalle: t };
   }
 
-  responses.push({ integrationCode, procesador: p.tipo, status: res.status, response: json });
+  responses.push({ integrationCode, procesador: p.tipo, request: appPayload, status: res.status, response: json });
 
   if (res.ok) {
     createdApps[integrationCode] = json;
@@ -205,6 +209,8 @@ exports.handler = async (event) => {
         }
       };
 
+      console.log('📤 Payload NOCCAPI:', JSON.stringify(noccapiBody, null, 2));
+
       const noa = await fetch('https://noccapi-stg.paymentez.com/commons/v1/create-or-update-application/', {
         method: 'POST',
         headers: {
@@ -214,7 +220,11 @@ exports.handler = async (event) => {
         body: JSON.stringify(noccapiBody)
       });
 
-      noccapiResponse = await noa.json().catch(async () => ({ error: await noa.text() }));
+      noccapiResponse = {
+        payload: noccapiBody,
+        response: await noa.json().catch(async () => ({ error: await noa.text() }))
+      };
+
     }
 
     return {

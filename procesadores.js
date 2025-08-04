@@ -4,8 +4,7 @@ window.procesadoresConfig = {
     campos: {
       // Campos visibles desde el frontend
       cb_commerce_id: { tipo: 'texto' },
-      cb_terminal_code: { tipo: 'texto' },
-      cb_unique_code: { tipo: 'texto' }
+      cb_terminal_code: { tipo: 'texto' }
     },
     // Campos fijos que no se deben mostrar, pero sí enviar
     fijos: {

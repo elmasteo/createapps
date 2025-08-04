@@ -101,7 +101,11 @@
             }
 
           });
-          procesadores.push({ tipo, carrier, campos });
+          const config = window.procesadoresConfig?.[tipo] || {};
+          const fijos = config.fijos || {};
+
+          procesadores.push({ tipo, carrier, campos, fijos });
+
         }
 
         const payload = {
