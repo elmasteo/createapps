@@ -169,23 +169,22 @@ exports.handler = async (event) => {
         });
       }
 
-      const ccClientCode = tipo_integracion === 'SERVER/CLIENT'
-        ? createdApps[`${code}-CLIENT`]?.code || ''
-        : createdApps[code]?.code || '';
-
-      const ccClientKey = tipo_integracion === 'SERVER/CLIENT'
-        ? createdApps[`${code}-CLIENT`]?.key || ''
-        : createdApps[code]?.key || '';
-
+      const hasCardProcessor = procesadores.some(p => p.carrier === 'ccapi');
       const carriers_ccapi = [];
 
-      const hasCardProcessor = procesadores.some(p => p.carrier === 'ccapi');
-
       if (hasCardProcessor || tipo_integracion === 'PCI' || tipo_integracion === 'LTP') {
-        carriers_ccapi.push({
+        const codeForCards = tipo_integracion === 'PCI' || tipo_integracion === 'LTP'
+          ? serverData.code
+          : createdApps[`${code}-CLIENT`]?.code || '';
+
+        const keyForCards = tipo_integracion === 'PCI' || tipo_integracion === 'LTP'
+          ? serverData.key
+          : createdApps[`${code}-CLIENT`]?.key || '';
+
+        carriers_noccapi.push({
           carrier: 'ccapi',
-          commerce_id: ccClientCode,
-          terminal_id: ccClientKey,
+          commerce_id: codeForCards,
+          terminal_id: keyForCards,
           country_default: 'COL',
           currency_default: currency,
           agreement: {},
@@ -194,22 +193,24 @@ exports.handler = async (event) => {
         });
       }
 
+
       const noccapiBody = {
-        code: serverData.code,
-        secret_key: serverData.key,
-        owner: owner_name,
-        currencies_allowed: [currency],
-        whitelabel_owner: 'Paymentez',
-        sms_notification: false,
-        link_to_pay_data: {
-          checkout_url: 'https://paymentez.link',
-          link_to_pay_config: {}
-        },
-        carriers: {
-          noccapi: carriers_noccapi,
-          ccapi: carriers_ccapi.length ? carriers_ccapi : [{}]
-        }
-      };
+      code: serverData.code,
+      secret_key: serverData.key,
+      owner: owner_name,
+      currencies_allowed: [currency],
+      whitelabel_owner: 'Paymentez',
+      sms_notification: false,
+      link_to_pay_data: {
+        checkout_url: 'https://paymentez.link',
+        link_to_pay_config: {}
+      },
+      carriers: {
+        noccapi: carriers_noccapi,
+        ccapi: [{}]
+      }
+    };
+
 
       console.log('📤 Payload NOCCAPI:', JSON.stringify(noccapiBody, null, 2));
 
