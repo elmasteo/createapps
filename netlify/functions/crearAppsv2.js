@@ -145,7 +145,9 @@ exports.handler = async (event) => {
       const tokenStr = Buffer.from(`${app_code};${unixtime};${uniq}`).toString('base64');
 
       const hasOnlyPSE = procesadores.every(p => p.carrier === 'PSE');
-      const hasCardProcessor = procesadores.some(p => p.carrier === 'ccapi');
+      const cardCarriers = ['67', '27', '34']; // carriers que activan CCAPI
+      const hasCardProcessor = procesadores.some(p => cardCarriers.includes(p.carrier));
+
 
       const pseEnabled = procesadores.some(p => p.carrier === 'PSE');
       const pseCommerceId = campos_extras?.pse_commerce_id?.trim();

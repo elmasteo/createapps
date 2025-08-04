@@ -1,6 +1,6 @@
 window.procesadoresConfig = {
   CBCO: {
-    carrier: 67,
+    carrier: "67",
     campos: {
       // Campos visibles desde el frontend
       cb_commerce_id: { tipo: 'texto' },
@@ -14,7 +14,7 @@ window.procesadoresConfig = {
     }
   },
   RB: {
-    carrier: 27,
+    carrier: "27",
     campos: {
       rb_idAdquiriente: { tipo: 'texto' },
       rb_idTerminal: { tipo: 'texto' }
@@ -31,7 +31,7 @@ window.procesadoresConfig = {
     }
   },
   PR: {
-    carrier: 34,
+    carrier: "34",
     campos: {
       pr_retailer_id: { tipo: 'texto' },
       pr_acceptor_location_id: { tipo: 'texto' },
