@@ -388,9 +388,18 @@ function updateAppHeaders() {
         app.querySelectorAll('.proc-container').forEach(p => {
           const tipo = p.querySelector('[name="tipo"]').value;
           const campos = {};
+
+          // Campos visibles del frontend
           p.querySelectorAll('input').forEach(i => {
             if (i.name) campos[i.name] = i.value === 'true' ? true : (i.value === 'false' ? false : i.value);
           });
+
+          // Agregar campos fijos si existen
+          const fijos = procesadoresConfig[tipo].fijos || {};
+          for (const [k, v] of Object.entries(fijos)) {
+            campos[k] = v;
+          }
+
           payload.procesadores.push({
             tipo,
             carrier: procesadoresConfig[tipo].carrier,
