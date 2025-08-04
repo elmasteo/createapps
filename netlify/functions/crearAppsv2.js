@@ -82,7 +82,6 @@ exports.handler = async (event) => {
         }
 
         Object.assign(camposApp, campos);
-
       }
 
       const appPayload = {
@@ -142,29 +141,14 @@ exports.handler = async (event) => {
       const uniq = CryptoJS.SHA256(app_key + unixtime).toString();
       const tokenStr = Buffer.from(`${app_code};${unixtime};${uniq}`).toString('base64');
 
-      const ccapiCarrier = {
-        carrier: 'ccapi',
-        commerce_id: tipo_integracion === 'SERVER/CLIENT'
-          ? createdApps[`${code}-CLIENT`]?.code || ''
-          : createdApps[code]?.code || '',
-        terminal_id: tipo_integracion === 'SERVER/CLIENT'
-          ? createdApps[`${code}-CLIENT`]?.key || ''
-          : createdApps[code]?.key || '',
-        country_default: 'COL',
-        currency_default: currency,
-        agreement: {},
-        max_amount: 1000000000,
-        min_amount: 1
-      };
-
-      let carriers = [];
+      const carriers_noccapi = [];
 
       const pseEnabled = procesadores.some(p => p.carrier === 'PSE');
       const pseCommerceId = campos_extras?.pse_commerce_id?.trim();
       const pseTerminalId = campos_extras?.pse_terminal_id?.trim();
 
       if (pseEnabled && pseCommerceId && pseTerminalId) {
-        carriers.push({
+        carriers_noccapi.push({
           carrier: 'PSE',
           commerce_id: pseCommerceId,
           terminal_id: pseTerminalId,
@@ -183,10 +167,31 @@ exports.handler = async (event) => {
           max_amount: 1000000000,
           min_amount: 1
         });
+      }
 
-        if (tipo_integracion === 'SERVER/CLIENT' && procesadores.length > 1) {
-          carriers.push(ccapiCarrier);
-        }
+      const ccClientCode = tipo_integracion === 'SERVER/CLIENT'
+        ? createdApps[`${code}-CLIENT`]?.code || ''
+        : createdApps[code]?.code || '';
+
+      const ccClientKey = tipo_integracion === 'SERVER/CLIENT'
+        ? createdApps[`${code}-CLIENT`]?.key || ''
+        : createdApps[code]?.key || '';
+
+      const carriers_ccapi = [];
+
+      const hasCardProcessor = procesadores.some(p => p.carrier === 'ccapi');
+
+      if (hasCardProcessor || tipo_integracion === 'PCI' || tipo_integracion === 'LTP') {
+        carriers_ccapi.push({
+          carrier: 'ccapi',
+          commerce_id: ccClientCode,
+          terminal_id: ccClientKey,
+          country_default: 'COL',
+          currency_default: currency,
+          agreement: {},
+          max_amount: 1000000000,
+          min_amount: 1
+        });
       }
 
       const noccapiBody = {
@@ -201,8 +206,8 @@ exports.handler = async (event) => {
           link_to_pay_config: {}
         },
         carriers: {
-          noccapi: carriers,
-          ccapi: [{}]
+          noccapi: carriers_noccapi,
+          ccapi: carriers_ccapi.length ? carriers_ccapi : [{}]
         }
       };
 
