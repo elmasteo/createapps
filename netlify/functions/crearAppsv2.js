@@ -38,19 +38,19 @@ exports.handler = async (event) => {
 
     let integrations = [];
 
-      if (tipo_integracion === 'SERVER/CLIENT') {
-        integrations = [`${code}-SERVER`, `${code}-CLIENT`];
-      } else if (tipo_integracion === 'LTP') {
-        integrations = [`${code}-LTP`];
-      } else {
-        integrations = [code];
-      }
+    if (tipo_integracion === 'SERVER/CLIENT') {
+      integrations = [`${code}-SERVER`, `${code}-CLIENT`];
+    } else if (tipo_integracion === 'LTP') {
+      integrations = [`${code}-LTP`];
+    } else {
+      integrations = [code];
+    }
 
     const responses = [];
     const createdApps = {};
 
     const globalCarriers = procesadores
-      .filter(p => p.carrier !== 'PSE')  // ⛔️ No enviar PSE a CCAPI
+      .filter(p => p.carrier !== 'PSE')
       .map(p => ({
         carrier: p.carrier,
         prefix: p.tipo,
@@ -60,75 +60,76 @@ exports.handler = async (event) => {
       }));
 
     for (const integrationCode of integrations) {
-  for (const p of procesadores) {
-  if (p.carrier === 'PSE') {
-    responses.push({
-      integrationCode,
-      procesador: p.tipo,
-      status: 200,
-      response: 'Procesador PSE: solo enviado a NOCCAPI, sin crear en CCAPI'
-    });
-    continue;
-  }
+      for (const p of procesadores) {
+        if (p.carrier === 'PSE') {
+          responses.push({
+            integrationCode,
+            procesador: p.tipo,
+            status: 200,
+            response: 'Procesador PSE: solo enviado a NOCCAPI, sin crear en CCAPI'
+          });
+          continue;
+        }
 
-  const camposCombinados = {
-    ...(p.fijos || {}),
-    ...(p.campos || {})
-  };
+        const camposCombinados = {
+          ...(p.fijos || {}),
+          ...(p.campos || {})
+        };
 
-  if (p.tipo === 'RB') {
-    camposCombinados.merchant_id = camposCombinados.rb_idAdquiriente;
-    camposCombinados.terminal_id = camposCombinados.rb_idTerminal;
-  }
+        if (p.tipo === 'RB') {
+          camposCombinados.merchant_id = camposCombinados.rb_idAdquiriente;
+          camposCombinados.terminal_id = camposCombinados.rb_idTerminal;
+        }
 
-  if (p.tipo === 'CBCO') {
-    camposCombinados.merchant_id = camposCombinados.cb_commerce_id;
-    camposCombinados.terminal_id = camposCombinados.cb_terminal_code;
-    camposCombinados.cb_commerce_id = camposCombinados.cb_unique_code;
-  }
+        if (p.tipo === 'CBCO') {
+          camposCombinados.merchant_id = camposCombinados.cb_commerce_id;
+          camposCombinados.terminal_id = camposCombinados.cb_terminal_code;
+          camposCombinados.cb_commerce_id = camposCombinados.cb_unique_code;
+        }
 
-  const appPayload = {
-    name,
-    code: integrationCode,
-    owner_name,
-    callback_url,
-    use_ccapi_announce,
-    http_notifications_enabled,
-    currency,
-    carrier: p.carrier,
-    carriers: globalCarriers,
-    ...camposCombinados,
-    ...(tipo_integracion === 'PCI' ? { is_pci: true } : {})
-  };
+        const appPayload = {
+          name,
+          code: integrationCode,
+          owner_name,
+          callback_url,
+          use_ccapi_announce,
+          http_notifications_enabled,
+          currency,
+          carrier: p.carrier,
+          carriers: globalCarriers,
+          ...camposCombinados,
+          ...(tipo_integracion === 'PCI' ? { is_pci: true } : {})
+        };
 
-  console.log('📤 Payload CCAPI:', JSON.stringify(appPayload, null, 2));
+        console.log('📤 Payload CCAPI:', JSON.stringify(appPayload, null, 2));
 
-  const res = await fetch(`${CCAPI_URL}/v3/application`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(appPayload)
-  });
+        const res = await fetch(`${CCAPI_URL}/v3/application`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(appPayload)
+        });
 
-  let json;
-  try {
-    json = await res.json();
-  } catch {
-    const t = await res.text();
-    json = { error: 'Respuesta no JSON', detalle: t };
-  }
+        let json;
+        try {
+          json = await res.json();
+        } catch (err) {
+          const t = await res.text();
+          json = { error: 'Respuesta no JSON', detalle: t };
+        }
 
-  responses.push({
-    integrationCode,
-    procesador: p.tipo,
-    request: appPayload,
-    status: res.status,
-    response: json
-  });
+        responses.push({
+          integrationCode,
+          procesador: p.tipo,
+          request: appPayload,
+          status: res.status,
+          response: json
+        });
 
-  if (res.ok && !createdApps[integrationCode]) {
-    createdApps[integrationCode] = json;
-  }
-}
+        if (res.ok && !createdApps[integrationCode]) {
+          createdApps[integrationCode] = json;
+        }
+      }
+    }
 
     let noccapiResponse = null;
     const serverCode = tipo_integracion === 'SERVER/CLIENT' ? `${code}-SERVER` : integrations[0];
@@ -219,11 +220,12 @@ exports.handler = async (event) => {
         body: JSON.stringify(noccapiBody)
       });
 
+      const noaJson = await noa.json().catch(async () => ({ error: await noa.text() }));
+
       noccapiResponse = {
         payload: noccapiBody,
-        response: await noa.json().catch(async () => ({ error: await noa.text() }))
+        response: noaJson
       };
-
     }
 
     return {
