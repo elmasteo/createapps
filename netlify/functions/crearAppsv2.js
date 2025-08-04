@@ -208,10 +208,9 @@ const noccapiBody = {
   },
   carriers: {
     noccapi: carriers_noccapi,
-    ccapi: hasOnlyPSE ? [] : [{}]
+    ccapi: []
   }
 };
-
 
       console.log('📤 Payload NOCCAPI:', JSON.stringify(noccapiBody, null, 2));
 
