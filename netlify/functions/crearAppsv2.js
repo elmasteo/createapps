@@ -78,8 +78,9 @@ exports.handler = async (event) => {
         const campos = { ...(p.campos || {}) };
 
         if (p.tipo === 'CBCO') {
-          campos['cb_commerce_id'] = campos['cb_unique_code'];
-        }
+        campos['cb_unique_code'] = campos['cb_commerce_id'] || '';
+      }
+
 
         Object.assign(camposApp, campos);
       }
