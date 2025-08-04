@@ -127,124 +127,124 @@ exports.handler = async (event) => {
       }
     }
 
-    let noccapiResponse = null;
-    const serverCode = tipo_integracion === 'SERVER/CLIENT' ? `${code}-SERVER` : integrations[0];
-    const serverData = createdApps[serverCode];
+let noccapiResponse = null;
+let carriers_noccapi = []; // <-- Declaración global
 
-    if (serverData) {
-      const authRes = await fetch('https://pg-micros.paymentez.com/v1/unixtime/');
-      const { unixtime } = await authRes.json();
+const serverCode = tipo_integracion === 'SERVER/CLIENT' ? `${code}-SERVER` : integrations[0];
+const serverData = createdApps[serverCode];
 
-      const app_code = process.env.PAYMENTEZ_APP_CODE;
-      const app_key = process.env.PAYMENTEZ_APP_KEY;
+if (serverData) {
+  const authRes = await fetch('https://pg-micros.paymentez.com/v1/unixtime/');
+  const { unixtime } = await authRes.json();
 
-      const uniq = CryptoJS.SHA256(app_key + unixtime).toString();
-      const tokenStr = Buffer.from(`${app_code};${unixtime};${uniq}`).toString('base64');
+  const app_code = process.env.PAYMENTEZ_APP_CODE;
+  const app_key = process.env.PAYMENTEZ_APP_KEY;
 
-      const hasOnlyPSE = procesadores.every(p => p.carrier === 'PSE');
-const hasCardProcessor = procesadores.some(p => p.carrier === 'ccapi');
+  const uniq = CryptoJS.SHA256(app_key + unixtime).toString();
+  const tokenStr = Buffer.from(`${app_code};${unixtime};${uniq}`).toString('base64');
 
-const pseEnabled = procesadores.some(p => p.carrier === 'PSE');
-const pseCommerceId = campos_extras?.pse_commerce_id?.trim();
-const pseTerminalId = campos_extras?.pse_terminal_id?.trim();
+  const hasOnlyPSE = procesadores.every(p => p.carrier === 'PSE');
+  const hasCardProcessor = procesadores.some(p => p.carrier === 'ccapi');
 
-console.log('🧪 pseEnabled:', pseEnabled);
-console.log('🧪 pseCommerceId:', pseCommerceId);
-console.log('🧪 pseTerminalId:', pseTerminalId);
-console.log('🧪 hasCardProcessor:', hasCardProcessor);
-console.log('🧪 tipo_integracion:', tipo_integracion);
+  const pseEnabled = procesadores.some(p => p.carrier === 'PSE');
+  const pseCommerceId = campos_extras?.pse_commerce_id?.trim();
+  const pseTerminalId = campos_extras?.pse_terminal_id?.trim();
 
+  console.log('🧪 pseEnabled:', pseEnabled);
+  console.log('🧪 pseCommerceId:', pseCommerceId);
+  console.log('🧪 pseTerminalId:', pseTerminalId);
+  console.log('🧪 hasCardProcessor:', hasCardProcessor);
+  console.log('🧪 tipo_integracion:', tipo_integracion);
 
-
-const carriers_noccapi = [];
-
-if (pseEnabled && pseCommerceId && pseTerminalId) {
-  carriers_noccapi.push({
-    carrier: 'PSE',
-    commerce_id: pseCommerceId,
-    terminal_id: pseTerminalId,
-    country_default: 'COL',
-    agreement: {
-      ciiu: campos_extras?.beneficiaryEntityCIIUCategory || '',
-      is_v2: true,
-      beneficiaryData: {
-        beneficiaryEntityName: campos_extras?.beneficiaryEntityName || '',
-        beneficiaryEntityCIIUCategory: campos_extras?.beneficiaryEntityCIIUCategory || '',
-        beneficiaryEntityIdentification: campos_extras?.beneficiaryEntityIdentification || '',
-        beneficiaryEntityIdentificationType: campos_extras?.beneficiaryEntityIdentificationType || ''
-      }
-    },
-    currency_default: 'COP',
-    max_amount: 1000000000,
-    min_amount: 1
-  });
-}
-
-if (!hasOnlyPSE && (hasCardProcessor || tipo_integracion === 'PCI' || tipo_integracion === 'LTP')) {
-  const codeForCards = (tipo_integracion === 'PCI' || tipo_integracion === 'LTP')
-    ? serverData.code
-    : createdApps[`${code}-CLIENT`]?.code || '';
-
-  const keyForCards = (tipo_integracion === 'PCI' || tipo_integracion === 'LTP')
-    ? serverData.key
-    : createdApps[`${code}-CLIENT`]?.key || '';
-
-  if (codeForCards && keyForCards) {
+  if (pseEnabled && pseCommerceId && pseTerminalId) {
     carriers_noccapi.push({
-      carrier: 'ccapi',
-      commerce_id: codeForCards,
-      terminal_id: keyForCards,
+      carrier: 'PSE',
+      commerce_id: pseCommerceId,
+      terminal_id: pseTerminalId,
       country_default: 'COL',
-      currency_default: currency,
-      agreement: {},
+      agreement: {
+        ciiu: campos_extras?.beneficiaryEntityCIIUCategory || '',
+        is_v2: true,
+        beneficiaryData: {
+          beneficiaryEntityName: campos_extras?.beneficiaryEntityName || '',
+          beneficiaryEntityCIIUCategory: campos_extras?.beneficiaryEntityCIIUCategory || '',
+          beneficiaryEntityIdentification: campos_extras?.beneficiaryEntityIdentification || '',
+          beneficiaryEntityIdentificationType: campos_extras?.beneficiaryEntityIdentificationType || ''
+        }
+      },
+      currency_default: 'COP',
       max_amount: 1000000000,
       min_amount: 1
     });
   }
+
+  if (!hasOnlyPSE && (hasCardProcessor || tipo_integracion === 'PCI' || tipo_integracion === 'LTP')) {
+    const codeForCards = (tipo_integracion === 'PCI' || tipo_integracion === 'LTP')
+      ? serverData.code
+      : createdApps[`${code}-CLIENT`]?.code || '';
+
+    const keyForCards = (tipo_integracion === 'PCI' || tipo_integracion === 'LTP')
+      ? serverData.key
+      : createdApps[`${code}-CLIENT`]?.key || '';
+
+    if (codeForCards && keyForCards) {
+      carriers_noccapi.push({
+        carrier: 'ccapi',
+        commerce_id: codeForCards,
+        terminal_id: keyForCards,
+        country_default: 'COL',
+        currency_default: currency,
+        agreement: {},
+        max_amount: 1000000000,
+        min_amount: 1
+      });
+    }
+  }
+
+  console.log('🧪 carriers_noccapi:', JSON.stringify(carriers_noccapi, null, 2));
+
+  const noccapiBody = {
+    code: serverData.code,
+    secret_key: serverData.key,
+    owner: owner_name,
+    currencies_allowed: [currency],
+    whitelabel_owner: 'Paymentez',
+    sms_notification: false,
+    link_to_pay_data: {
+      checkout_url: 'https://paymentez.link',
+      link_to_pay_config: {}
+    },
+    carriers: {
+      noccapi: carriers_noccapi,
+      ccapi: []
+    }
+  };
+
+  console.log('📤 Payload NOCCAPI:', JSON.stringify(noccapiBody, null, 2));
+
+  const noa = await fetch('https://noccapi-stg.paymentez.com/commons/v1/create-or-update-application/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'auth-token': tokenStr
+    },
+    body: JSON.stringify(noccapiBody)
+  });
+
+  const noaJson = await noa.json().catch(async () => ({ error: await noa.text() }));
+
+  noccapiResponse = {
+    payload: noccapiBody,
+    response: noaJson
+  };
 }
 
-console.log('🧪 carriers_noccapi:', JSON.stringify(carriers_noccapi, null, 2));
-
-const noccapiBody = {
-  code: serverData.code,
-  secret_key: serverData.key,
-  owner: owner_name,
-  currencies_allowed: [currency],
-  whitelabel_owner: 'Paymentez',
-  sms_notification: false,
-  link_to_pay_data: {
-    checkout_url: 'https://paymentez.link',
-    link_to_pay_config: {}
-  },
-  carriers: {
-    noccapi: carriers_noccapi,
-    ccapi: []
-  }
+// Ya no dará error aquí:
+return {
+  statusCode: 200,
+  body: JSON.stringify({ results: responses, noccapiResponse, debug: { carriers_noccapi } })
 };
 
-      console.log('📤 Payload NOCCAPI:', JSON.stringify(noccapiBody, null, 2));
-
-      const noa = await fetch('https://noccapi-stg.paymentez.com/commons/v1/create-or-update-application/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'auth-token': tokenStr
-        },
-        body: JSON.stringify(noccapiBody)
-      });
-
-      const noaJson = await noa.json().catch(async () => ({ error: await noa.text() }));
-
-      noccapiResponse = {
-        payload: noccapiBody,
-        response: noaJson
-      };
-    }
-
-      return {
-    statusCode: 200,
-    body: JSON.stringify({ results: responses, noccapiResponse, debug: { carriers_noccapi } })
-  };
 
   } catch (e) {
     return {
