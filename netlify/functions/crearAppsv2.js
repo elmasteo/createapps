@@ -79,7 +79,6 @@ for (const p of procesadores) {
 
   }
 
-  // B. Campos fijos directamente desde el archivo procesadores.js
   const camposFijos = {};
   if (p.fijos) {
     for (const [key, value] of Object.entries(p.fijos)) {
@@ -87,7 +86,6 @@ for (const p of procesadores) {
     }
   }
 
-  // C. Campos derivados (ej: duplicar valores de rb_idAdquiriente → merchant_id)
   if (p.tipo === 'RB') {
     camposFijos['merchant_id'] = camposDinamicos['rb_idAdquiriente'];
     camposFijos['terminal_id'] = camposDinamicos['rb_idTerminal'];
@@ -99,7 +97,6 @@ for (const p of procesadores) {
     camposFijos['terminal_id'] = camposDinamicos['cb_terminal_code'];
   }
 
-  // D. Unificar todos los campos para enviarlos al servicio
   Object.assign(camposApp, camposFijos, camposDinamicos);
 }
 
