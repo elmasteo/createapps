@@ -104,7 +104,7 @@
           const config = window.procesadoresConfig?.[tipo] || {};
           const fijos = config.fijos || {};
 
-          procesadores.push({ tipo, carrier, campos, fijos });
+          procesadores.push({ tipo, carrier, valores: campos, fijos });
 
         }
 
@@ -127,7 +127,7 @@
               const config = window.procesadoresConfig?.[p.tipo] || {};
 
               // Combina campos capturados desde el DOM + campos de configuración
-              const camposCombinados = { ...p.campos };
+               const camposCombinados = { ...p.valores };
 
               // Asignar campos derivados si aplica
               if (p.tipo === 'RB') {
