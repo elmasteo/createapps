@@ -60,20 +60,14 @@ exports.handler = async (event) => {
       }));
 
     for (const integrationCode of integrations) {
-  const p = procesadores[0];
-
-  // Si el único procesador es PSE, salta la llamada a CCAPI
-  if (procesadores.length === 1 && p.carrier === 'PSE') {
+  for (const p of procesadores) {
+  if (p.carrier === 'PSE') {
     responses.push({
       integrationCode,
       procesador: p.tipo,
       status: 200,
       response: 'Procesador PSE: solo enviado a NOCCAPI, sin crear en CCAPI'
     });
-    createdApps[integrationCode] = {
-      code: integrationCode,
-      key: p.campos?.secret_key || 'dummy-key'
-    };
     continue;
   }
 
@@ -82,16 +76,16 @@ exports.handler = async (event) => {
     ...(p.campos || {})
   };
 
-if (p.tipo === 'RB') {
-  camposCombinados.merchant_id = camposCombinados.rb_idAdquiriente;
-  camposCombinados.terminal_id = camposCombinados.rb_idTerminal;
-}
+  if (p.tipo === 'RB') {
+    camposCombinados.merchant_id = camposCombinados.rb_idAdquiriente;
+    camposCombinados.terminal_id = camposCombinados.rb_idTerminal;
+  }
 
-if (p.tipo === 'CBCO') {
-  camposCombinados.merchant_id = camposCombinados.cb_commerce_id;
-  camposCombinados.terminal_id = camposCombinados.cb_terminal_code;
-  camposCombinados.cb_commerce_id = camposCombinados.cb_unique_code;
-}
+  if (p.tipo === 'CBCO') {
+    camposCombinados.merchant_id = camposCombinados.cb_commerce_id;
+    camposCombinados.terminal_id = camposCombinados.cb_terminal_code;
+    camposCombinados.cb_commerce_id = camposCombinados.cb_unique_code;
+  }
 
   const appPayload = {
     name,
@@ -103,9 +97,38 @@ if (p.tipo === 'CBCO') {
     currency,
     carrier: p.carrier,
     carriers: globalCarriers,
-    ...JSON.parse(JSON.stringify(camposCombinados)),
+    ...camposCombinados,
     ...(tipo_integracion === 'PCI' ? { is_pci: true } : {})
   };
+
+  console.log('📤 Payload CCAPI:', JSON.stringify(appPayload, null, 2));
+
+  const res = await fetch(`${CCAPI_URL}/v3/application`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(appPayload)
+  });
+
+  let json;
+  try {
+    json = await res.json();
+  } catch {
+    const t = await res.text();
+    json = { error: 'Respuesta no JSON', detalle: t };
+  }
+
+  responses.push({
+    integrationCode,
+    procesador: p.tipo,
+    request: appPayload,
+    status: res.status,
+    response: json
+  });
+
+  if (res.ok && !createdApps[integrationCode]) {
+    createdApps[integrationCode] = json;
+  }
+}
 
   console.log('📤 Payload CCAPI:', JSON.stringify(appPayload, null, 2));
 
