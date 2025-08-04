@@ -125,32 +125,30 @@
             ...payload,
             procesadores: payload.procesadores.map(p => {
               const config = window.procesadoresConfig?.[p.tipo] || {};
+              const fijos = config.fijos || {};
+              const camposCombinados = { ...fijos, ...p.valores };
 
-              // Combina campos capturados desde el DOM + campos de configuración
-               const camposCombinados = { ...p.valores };
-
-              // Asignar campos derivados si aplica
+              // Añadir campos derivados según el tipo
               if (p.tipo === 'RB') {
-                camposCombinados['merchant_id'] = p.campos['rb_idAdquiriente'];
-                camposCombinados['terminal_id'] = p.campos['rb_idTerminal'];
+                camposCombinados['merchant_id'] = p.valores['rb_idAdquiriente'];
+                camposCombinados['terminal_id'] = p.valores['rb_idTerminal'];
               }
+
               if (p.tipo === 'CBCO') {
-                camposCombinados['merchant_id'] = p.campos['cb_commerce_id'];
-                camposCombinados['terminal_id'] = p.campos['cb_terminal_code'];
-                camposCombinados['cb_commerce_id'] = p.campos['cb_commerce_id']; // asegurar que no se pierda
+                camposCombinados['cb_commerce_id'] = p.valores['cb_commerce_id'];
+                camposCombinados['merchant_id'] = p.valores['cb_commerce_id'];
+                camposCombinados['terminal_id'] = p.valores['cb_terminal_code'];
               }
 
               return {
                 tipo: p.tipo,
                 carrier: p.carrier,
-                campos: camposCombinados,
-                fijos: config.fijos || {}
+                campos: camposCombinados
               };
             })
           };
 
-
-          const res = await fetch('/.netlify/functions/createApp', {
+          const res = await fetch('/.netlify/functions/createAppv2', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payloadEnriquecido)
