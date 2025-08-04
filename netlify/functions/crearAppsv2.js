@@ -64,52 +64,50 @@ exports.handler = async (event) => {
 
   const camposApp = {};
 
-  for (const p of procesadores) {
-    if (p.carrier === 'PSE') {
-      responses.push({
-        integrationCode,
-        procesador: p.tipo,
-        status: 200,
-        response: 'Procesador PSE: solo enviado a NOCCAPI, sin crear en CCAPI'
-      });
-      continue;
-    }
+for (const p of procesadores) {
+  if (p.carrier === 'PSE') {
+    responses.push({
+      integrationCode,
+      procesador: p.tipo,
+      status: 200,
+      response: 'Procesador PSE: solo enviado a NOCCAPI, sin crear en CCAPI'
+    });
+    continue;
+  }
 
-        // 1. Combina campos dinámicos (campos) con valores del front
-    const camposDinamicos = { ...(p.campos || {}) };
-    for (const [key, meta] of Object.entries(camposDinamicos)) {
-      camposDinamicos[key] = campos_extras?.[key] ?? meta;
-    }
-
-    // 2. Agrega campos fijos (valores literales que no vienen del front)
-    const camposFijos = {};
-    if (p.fijos) {
-      for (const [k, v] of Object.entries(p.fijos)) {
-        camposFijos[k] = v;
+  // A. Campos visibles del frontend
+  const camposDinamicos = {};
+  if (p.campos) {
+    for (const [key] of Object.entries(p.campos)) {
+      if (campos_extras?.[key]) {
+        camposDinamicos[key] = campos_extras[key];
       }
     }
-
-    // 3. Unifica todos los campos para la app
-    const camposCombinados = {
-      ...camposFijos,
-      ...camposDinamicos
-    };
-
-
-    // Reutilizar valores
-    if (p.tipo === 'RB') {
-  camposCombinados.merchant_id = campos_extras?.rb_idAdquiriente || camposCombinados.rb_idAdquiriente;
-  camposCombinados.terminal_id = campos_extras?.rb_idTerminal || camposCombinados.rb_idTerminal;
-}
-
-if (p.tipo === 'CBCO') {
-  camposCombinados.cb_commerce_id = campos_extras?.cb_unique_code || camposCombinados.cb_unique_code;
-  camposCombinados.merchant_id = campos_extras?.cb_commerce_id || camposCombinados.cb_commerce_id;
-  camposCombinados.terminal_id = campos_extras?.cb_terminal_code || camposCombinados.cb_terminal_code;
-}
-
-    Object.assign(camposApp, camposCombinados); // 👈 Combina todo en un solo payload
   }
+
+  // B. Campos fijos directamente desde el archivo procesadores.js
+  const camposFijos = {};
+  if (p.fijos) {
+    for (const [key, value] of Object.entries(p.fijos)) {
+      camposFijos[key] = value;
+    }
+  }
+
+  // C. Campos derivados (ej: duplicar valores de rb_idAdquiriente → merchant_id)
+  if (p.tipo === 'RB') {
+    camposFijos['merchant_id'] = camposDinamicos['rb_idAdquiriente'];
+    camposFijos['terminal_id'] = camposDinamicos['rb_idTerminal'];
+  }
+
+  if (p.tipo === 'CBCO') {
+    camposFijos['cb_commerce_id'] = camposDinamicos['cb_commerce_id'];
+    camposFijos['merchant_id'] = camposDinamicos['cb_commerce_id'];
+    camposFijos['terminal_id'] = camposDinamicos['cb_terminal_code'];
+  }
+
+  // D. Unificar todos los campos para enviarlos al servicio
+  Object.assign(camposApp, camposFijos, camposDinamicos);
+}
 
   const appPayload = {
     name,
