@@ -60,76 +60,84 @@ exports.handler = async (event) => {
       }));
 
     for (const integrationCode of integrations) {
-      for (const p of procesadores) {
-        if (p.carrier === 'PSE') {
-          responses.push({
-            integrationCode,
-            procesador: p.tipo,
-            status: 200,
-            response: 'Procesador PSE: solo enviado a NOCCAPI, sin crear en CCAPI'
-          });
-          continue;
-        }
+  if (createdApps[integrationCode]) continue; // 👈 Ya fue creada
 
-        const camposCombinados = {
-          ...(p.fijos || {}),
-          ...(p.campos || {})
-        };
+  const camposApp = {};
 
-        if (p.tipo === 'RB') {
-          camposCombinados.merchant_id = camposCombinados.rb_idAdquiriente;
-          camposCombinados.terminal_id = camposCombinados.rb_idTerminal;
-        }
-
-        if (p.tipo === 'CBCO') {
-          camposCombinados.merchant_id = camposCombinados.cb_commerce_id;
-          camposCombinados.terminal_id = camposCombinados.cb_terminal_code;
-          camposCombinados.cb_commerce_id = camposCombinados.cb_unique_code;
-        }
-
-        const appPayload = {
-          name,
-          code: integrationCode,
-          owner_name,
-          callback_url,
-          use_ccapi_announce,
-          http_notifications_enabled,
-          currency,
-          carrier: p.carrier,
-          carriers: globalCarriers,
-          ...camposCombinados,
-          ...(tipo_integracion === 'PCI' ? { is_pci: true } : {})
-        };
-
-        console.log('📤 Payload CCAPI:', JSON.stringify(appPayload, null, 2));
-
-        const res = await fetch(`${CCAPI_URL}/v3/application`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(appPayload)
-        });
-
-        let json;
-        try {
-          json = await res.json();
-        } catch (err) {
-          const t = await res.text();
-          json = { error: 'Respuesta no JSON', detalle: t };
-        }
-
-        responses.push({
-          integrationCode,
-          procesador: p.tipo,
-          request: appPayload,
-          status: res.status,
-          response: json
-        });
-
-        if (res.ok && !createdApps[integrationCode]) {
-          createdApps[integrationCode] = json;
-        }
-      }
+  for (const p of procesadores) {
+    if (p.carrier === 'PSE') {
+      responses.push({
+        integrationCode,
+        procesador: p.tipo,
+        status: 200,
+        response: 'Procesador PSE: solo enviado a NOCCAPI, sin crear en CCAPI'
+      });
+      continue;
     }
+
+    const camposCombinados = {
+      ...(p.fijos || {}),
+      ...(p.campos || {})
+    };
+
+    // Reutilizar valores
+    if (p.tipo === 'RB') {
+  camposCombinados.merchant_id = campos_extras?.rb_idAdquiriente || camposCombinados.rb_idAdquiriente;
+  camposCombinados.terminal_id = campos_extras?.rb_idTerminal || camposCombinados.rb_idTerminal;
+}
+
+if (p.tipo === 'CBCO') {
+  camposCombinados.cb_commerce_id = campos_extras?.cb_unique_code || camposCombinados.cb_unique_code;
+  camposCombinados.merchant_id = campos_extras?.cb_commerce_id || camposCombinados.cb_commerce_id;
+  camposCombinados.terminal_id = campos_extras?.cb_terminal_code || camposCombinados.cb_terminal_code;
+}
+
+    Object.assign(camposApp, camposCombinados); // 👈 Combina todo en un solo payload
+  }
+
+  const appPayload = {
+    name,
+    code: integrationCode,
+    owner_name,
+    callback_url,
+    use_ccapi_announce,
+    http_notifications_enabled,
+    currency,
+    carrier: procesadores[0].carrier, // 👈 Escoge uno representativo
+    carriers: globalCarriers,
+    ...camposApp,
+    ...(tipo_integracion === 'PCI' ? { is_pci: true } : {})
+  };
+
+  console.log('📤 Payload CCAPI:', JSON.stringify(appPayload, null, 2));
+
+  const res = await fetch(`${CCAPI_URL}/v3/application`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(appPayload)
+  });
+
+  let json;
+  try {
+    json = await res.json();
+  } catch (err) {
+    const t = await res.text();
+    json = { error: 'Respuesta no JSON', detalle: t };
+  }
+
+  responses.push({
+    integrationCode,
+    procesador: 'multi', // o usa el tipo principal
+    request: appPayload,
+    status: res.status,
+    response: json
+  });
+
+  if (res.ok) {
+    createdApps[integrationCode] = json;
+  }
+}
+
 
     let noccapiResponse = null;
     const serverCode = tipo_integracion === 'SERVER/CLIENT' ? `${code}-SERVER` : integrations[0];
