@@ -144,6 +144,10 @@ exports.handler = async (event) => {
       const hasOnlyPSE = procesadores.every(p => p.carrier === 'PSE');
 const hasCardProcessor = procesadores.some(p => p.carrier === 'ccapi');
 
+const pseEnabled = procesadores.some(p => p.carrier === 'PSE');
+const pseCommerceId = campos_extras?.pse_commerce_id?.trim();
+const pseTerminalId = campos_extras?.pse_terminal_id?.trim();
+
 const carriers_noccapi = [];
 
 if (pseEnabled && pseCommerceId && pseTerminalId) {
