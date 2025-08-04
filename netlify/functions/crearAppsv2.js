@@ -148,25 +148,23 @@ exports.handler = async (event) => {
       const cardCarriers = ['67', '27', '34']; // carriers que activan CCAPI
       const hasCardProcessor = procesadores.some(p => cardCarriers.includes(p.carrier));
 
+      // Buscar el procesador tipo PSE
+      const pseProcessor = procesadores.find(p => p.carrier === 'PSE' && p.campos?.carrier_noccapi === 'PSE');
 
-      const pseEnabled = procesadores.some(p => p.carrier === 'PSE');
-      const pseCommerceId = campos_extras?.pse_commerce_id?.trim();
-      const pseTerminalId = campos_extras?.pse_terminal_id?.trim();
-
-      if (pseEnabled && pseCommerceId && pseTerminalId) {
+      if (pseProcessor && pseProcessor.campos?.commerce_id && pseProcessor.campos?.terminal_id) {
         carriers_noccapi.push({
           carrier: 'PSE',
-          commerce_id: pseCommerceId,
-          terminal_id: pseTerminalId,
+          commerce_id: pseProcessor.campos.commerce_id.trim(),
+          terminal_id: pseProcessor.campos.terminal_id.trim(),
           country_default: 'COL',
           agreement: {
-            ciiu: campos_extras?.beneficiaryEntityCIIUCategory || '',
+            ciiu: pseProcessor.campos?.beneficiaryEntityCIIUCategory || '',
             is_v2: true,
             beneficiaryData: {
-              beneficiaryEntityName: campos_extras?.beneficiaryEntityName || '',
-              beneficiaryEntityCIIUCategory: campos_extras?.beneficiaryEntityCIIUCategory || '',
-              beneficiaryEntityIdentification: campos_extras?.beneficiaryEntityIdentification || '',
-              beneficiaryEntityIdentificationType: campos_extras?.beneficiaryEntityIdentificationType || ''
+              beneficiaryEntityName: pseProcessor.campos?.beneficiaryEntityName || '',
+              beneficiaryEntityCIIUCategory: pseProcessor.campos?.beneficiaryEntityCIIUCategory || '',
+              beneficiaryEntityIdentification: pseProcessor.campos?.beneficiaryEntityIdentification || '',
+              beneficiaryEntityIdentificationType: pseProcessor.campos?.beneficiaryEntityIdentificationType || ''
             }
           },
           currency_default: 'COP',
@@ -174,7 +172,7 @@ exports.handler = async (event) => {
           min_amount: 1
         });
       } else {
-        console.log('⚠️ NO se agregó carrier PSE - faltan campos o condiciones.');
+        console.log('⚠️ NO se agregó carrier PSE - datos incompletos o no presentes en procesadores[].');
       }
 
       if (!hasOnlyPSE && (hasCardProcessor || tipo_integracion === 'PCI' || tipo_integracion === 'LTP')) {
