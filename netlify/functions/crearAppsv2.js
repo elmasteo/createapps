@@ -75,22 +75,21 @@ exports.handler = async (event) => {
           continue;
         }
 
-        const campos = p.campos || {};
-        Object.assign(camposApp, campos);
-
+        const campos = { ...(p.campos || {}) };
 
         if (p.tipo === 'RB') {
-          camposFijos['merchant_id'] = camposDinamicos['rb_idAdquiriente'];
-          camposFijos['terminal_id'] = camposDinamicos['rb_idTerminal'];
+          campos['merchant_id'] = campos['rb_idAdquiriente'];
+          campos['terminal_id'] = campos['rb_idTerminal'];
         }
 
         if (p.tipo === 'CBCO') {
-          camposFijos['cb_commerce_id'] = camposDinamicos['cb_commerce_id'];
-          camposFijos['merchant_id'] = camposDinamicos['cb_commerce_id'];
-          camposFijos['terminal_id'] = camposDinamicos['cb_terminal_code'];
+          campos['cb_commerce_id'] = campos['cb_commerce_id'];
+          campos['merchant_id'] = campos['cb_commerce_id'];
+          campos['terminal_id'] = campos['cb_terminal_code'];
         }
 
-        Object.assign(camposApp, camposFijos, camposDinamicos);
+        Object.assign(camposApp, campos);
+
       }
 
       const appPayload = {
