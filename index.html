@@ -124,27 +124,31 @@
           const payloadEnriquecido = {
             ...payload,
             procesadores: payload.procesadores.map(p => {
-              const config = window.procesadoresConfig[p.tipo] || {};
-              const camposCapturados = {};
+              const config = window.procesadoresConfig?.[p.tipo] || {};
 
-              // Extrae los campos dinámicos desde el DOM o payload.campos_extras
-              if (config.campos) {
-                for (const campo in config.campos) {
-                  if (payload.campos_extras?.[campo]) {
-                    camposCapturados[campo] = payload.campos_extras[campo];
-                  }
-                }
+              // Combina campos capturados desde el DOM + campos de configuración
+              const camposCombinados = { ...p.campos };
+
+              // Asignar campos derivados si aplica
+              if (p.tipo === 'RB') {
+                camposCombinados['merchant_id'] = p.campos['rb_idAdquiriente'];
+                camposCombinados['terminal_id'] = p.campos['rb_idTerminal'];
+              }
+              if (p.tipo === 'CBCO') {
+                camposCombinados['merchant_id'] = p.campos['cb_commerce_id'];
+                camposCombinados['terminal_id'] = p.campos['cb_terminal_code'];
+                camposCombinados['cb_commerce_id'] = p.campos['cb_commerce_id']; // asegurar que no se pierda
               }
 
               return {
                 tipo: p.tipo,
-                carrier: config.carrier || p.carrier,
-                campos: config.campos || {},
-                fijos: config.fijos || {},
-                valores: camposCapturados
+                carrier: p.carrier,
+                campos: camposCombinados,
+                fijos: config.fijos || {}
               };
             })
           };
+
 
           const res = await fetch('/.netlify/functions/createApp', {
             method: 'POST',
