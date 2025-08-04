@@ -75,14 +75,8 @@ for (const p of procesadores) {
     continue;
   }
 
-  // A. Campos visibles del frontend
-  const camposDinamicos = {};
-  if (p.campos) {
-    for (const [key] of Object.entries(p.campos)) {
-      if (campos_extras?.[key]) {
-        camposDinamicos[key] = campos_extras[key];
-      }
-    }
+ const camposDinamicos = p.valores || {};
+
   }
 
   // B. Campos fijos directamente desde el archivo procesadores.js

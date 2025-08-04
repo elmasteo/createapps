@@ -121,16 +121,44 @@
         };
 
         try {
+          const payloadEnriquecido = {
+            ...payload,
+            procesadores: payload.procesadores.map(p => {
+              const config = window.procesadoresConfig[p.tipo] || {};
+              const camposCapturados = {};
+
+              // Extrae los campos dinámicos desde el DOM o payload.campos_extras
+              if (config.campos) {
+                for (const campo in config.campos) {
+                  if (payload.campos_extras?.[campo]) {
+                    camposCapturados[campo] = payload.campos_extras[campo];
+                  }
+                }
+              }
+
+              return {
+                tipo: p.tipo,
+                carrier: config.carrier || p.carrier,
+                campos: config.campos || {},
+                fijos: config.fijos || {},
+                valores: camposCapturados
+              };
+            })
+          };
+
           const res = await fetch('/.netlify/functions/createApp', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payloadEnriquecido)
           });
+
           const data = await res.json();
           log.textContent += `Resultado para "${payload.code}":\n${JSON.stringify(data, null, 2)}\n\n`;
+
         } catch (e) {
           log.textContent += `Error procesando "${payload.code}": ${e.message}\n`;
         }
+
       }
     }
   </script>
