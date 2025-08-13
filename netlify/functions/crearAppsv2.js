@@ -240,7 +240,7 @@ exports.handler = async (event) => {
       });
 
       const noaJson = await noa.json().catch(async () => ({ error: await noa.text() }));
-/*
+
       noccapiResponse = {
         payload: noccapiBody,
         response: noaJson
@@ -251,8 +251,8 @@ exports.handler = async (event) => {
       statusCode: 200,
       body: JSON.stringify({ results: responses, noccapiResponse, debug: { carriers_noccapi } })
     };
-*/
 
+/*
       noccapiResponse = {
         response: noaJson
       };
@@ -263,7 +263,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({ results: responses, noccapiResponse })
     };
 
-
+*/
   } catch (e) {
     return {
       statusCode: 500,
