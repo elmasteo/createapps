@@ -247,23 +247,25 @@ exports.handler = async (event) => {
       };
     }
 
+    /*
+
     return {
       statusCode: 200,
       body: JSON.stringify({ results: responses, noccapiResponse, debug: { carriers_noccapi } })
     };
 
-/*
+
       noccapiResponse = {
         response: noaJson
       };
     }
-
+    */
     return {
       statusCode: 200,
       body: JSON.stringify({ results: responses, noccapiResponse })
     };
 
-*/
+
   } catch (e) {
     return {
       statusCode: 500,
