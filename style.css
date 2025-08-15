@@ -100,18 +100,7 @@ button:hover {
   background: #175b81;
 }
 
-.log {
-  background: #111;
-  color: #39ff14;
-  padding: 12px;
-  font-family: monospace;
-  height: 100%;
-  overflow-y: auto;
-  border-radius: 8px;
-  font-size: 13px;
-  border: 1px solid #333;
-  flex-grow: 1;
-}
+.log { background: #111; color: #39ff14; padding: 12px; font-family: monospace; height: 100%; overflow-y: auto; border-radius: 8px; font-size: 13px; border: 1px solid #333; flex-grow: 1; }
 
 .app-container {
   position: relative;
@@ -208,15 +197,32 @@ ul li a.active {
   background-color: #175b81;
 }
 
-/* Log adicional para masivo */
-#log { 
-  margin-top: 20px; 
-  padding: 10px; 
-  background: #f9f9f9; 
-  border: 1px solid #ccc; 
-  height: 200px; 
-  overflow-y: auto; 
-  font-size: 14px;
-}
 .ok { color: green; }
 .error { color: red; }
+
+input[type="file"] {
+      width: calc(100% - 22px);
+      padding: 10px;
+      margin: 20px auto;
+      border: 2px solid #091f2d;
+      border-radius: 10px;
+      display: block;
+      font-size: 16px;
+      color: #091f2d;
+      background-color: #f9f9f9;
+      cursor: pointer;
+    }
+
+    input[type="file"]::file-selector-button {
+      background: #091f2d;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    input[type="file"]::file-selector-button:hover {
+      background: #091f2d;
+    }
