@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <title>Cargue Masivo de Apps</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link rel="icon" href="https://docs.nuvei.com/wp-content/themes/manual-child/img/favicons/cropped-favicon-nuvei-32x32.png" sizes="32x32">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -32,6 +34,67 @@
 </script>
 
   <script>
+    async function init() {
+  const clave = await new Promise(resolve => {
+  const overlay = document.createElement("div");
+  overlay.style.position = "fixed";
+  overlay.style.top = 0;
+  overlay.style.left = 0;
+  overlay.style.width = "100vw";
+  overlay.style.height = "100vh";
+  overlay.style.background = "rgba(0,0,0,0.8)";
+  overlay.style.display = "flex";
+  overlay.style.flexDirection = "column";
+  overlay.style.justifyContent = "center";
+  overlay.style.alignItems = "center";
+  overlay.style.zIndex = 9999;
+
+  const input = document.createElement("input");
+  input.type = "password";
+  input.placeholder = "🔒 Ingresa tu clave";
+  input.style.padding = "10px";
+  input.style.fontSize = "16px";
+  input.style.borderRadius = "5px";
+  input.style.border = "1px solid #ccc";
+  input.style.marginBottom = "10px";
+
+  const btn = document.createElement("button");
+  btn.textContent = "Acceder";
+  btn.style.padding = "10px 20px";
+  btn.style.fontSize = "16px";
+  btn.style.border = "none";
+  btn.style.borderRadius = "5px";
+  btn.style.cursor = "pointer";
+
+  btn.onclick = () => {
+    const val = input.value;
+    document.body.removeChild(overlay);
+    resolve(val);
+  };
+
+  overlay.appendChild(input);
+  overlay.appendChild(btn);
+  document.body.appendChild(overlay);
+});
+
+
+  const res = await fetch('/.netlify/functions/validarClave', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ clave })
+  });
+
+  const { autorizado } = await res.json();
+
+  if (!autorizado) {
+    alert("Clave incorrecta. Acceso denegado.");
+    document.body.innerHTML = "<h2 style='text-align:center; margin-top:20%'>🚫 Acceso no autorizado</h2>";
+    return;
+  }
+
+}
+
+init();
 
     let excelData = [];
 
