@@ -34,49 +34,55 @@
 </script>
 
   <script>
+
     async function init() {
   const clave = await new Promise(resolve => {
-  const overlay = document.createElement("div");
-  overlay.style.position = "fixed";
-  overlay.style.top = 0;
-  overlay.style.left = 0;
-  overlay.style.width = "100vw";
-  overlay.style.height = "100vh";
-  overlay.style.background = "rgba(0,0,0,0.8)";
-  overlay.style.display = "flex";
-  overlay.style.flexDirection = "column";
-  overlay.style.justifyContent = "center";
-  overlay.style.alignItems = "center";
-  overlay.style.zIndex = 9999;
+    const overlay = document.createElement("div");
+    overlay.style.position = "fixed";
+    overlay.style.top = 0;
+    overlay.style.left = 0;
+    overlay.style.width = "100vw";
+    overlay.style.height = "100vh";
+    overlay.style.background = "rgba(0,0,0,0.8)";
+    overlay.style.display = "flex";
+    overlay.style.flexDirection = "column";
+    overlay.style.justifyContent = "center";
+    overlay.style.alignItems = "center";
+    overlay.style.zIndex = 9999;
 
-  const input = document.createElement("input");
-  input.type = "password";
-  input.placeholder = "🔒 Ingresa tu clave";
-  input.style.padding = "10px";
-  input.style.fontSize = "16px";
-  input.style.borderRadius = "5px";
-  input.style.border = "1px solid #ccc";
-  input.style.marginBottom = "10px";
+    const input = document.createElement("input");
+    input.type = "password";
+    input.placeholder = "🔒 Ingresa tu clave";
+    input.style.padding = "10px";
+    input.style.fontSize = "16px";
+    input.style.borderRadius = "5px";
+    input.style.border = "1px solid #ccc";
+    input.style.marginBottom = "10px";
+    input.style.width = "250px"; // ancho fijo
+    input.style.maxWidth = "80%"; // no más del 80% en pantallas pequeñas
+    input.style.boxShadow = "0 4px 10px rgba(0,0,0,0.3)"; // sombra sutil
+    input.style.background = "#fff";
 
-  const btn = document.createElement("button");
-  btn.textContent = "Acceder";
-  btn.style.padding = "10px 20px";
-  btn.style.fontSize = "16px";
-  btn.style.border = "none";
-  btn.style.borderRadius = "5px";
-  btn.style.cursor = "pointer";
+    const btn = document.createElement("button");
+    btn.textContent = "Acceder";
+    btn.style.padding = "10px 20px";
+    btn.style.fontSize = "16px";
+    btn.style.border = "none";
+    btn.style.borderRadius = "5px";
+    btn.style.cursor = "pointer";
+    btn.style.background = "#4CAF50";
+    btn.style.color = "#fff";
 
-  btn.onclick = () => {
-    const val = input.value;
-    document.body.removeChild(overlay);
-    resolve(val);
-  };
+      btn.onclick = () => {
+        const val = input.value;
+        document.body.removeChild(overlay);
+        resolve(val);
+      };
 
-  overlay.appendChild(input);
-  overlay.appendChild(btn);
-  document.body.appendChild(overlay);
-});
-
+      overlay.appendChild(input);
+      overlay.appendChild(btn);
+      document.body.appendChild(overlay);
+    });
 
   const res = await fetch('/.netlify/functions/validarClave', {
     method: 'POST',
