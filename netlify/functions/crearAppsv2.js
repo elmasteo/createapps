@@ -1,4 +1,4 @@
-const fetch = require('node-fetch');
+/*const fetch = require('node-fetch');
 const CryptoJS = require('crypto-js');
 
 exports.handler = async (event) => {
@@ -35,6 +35,66 @@ exports.handler = async (event) => {
       'Content-Type': 'application/json',
       Authorization: `Token ${token}`
     };
+*/
+exports.handler = async (event) => {
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: 'Método no permitido' };
+  }
+
+  try {
+    const {
+      name, code, owner_name, callback_url,
+      use_ccapi_announce, http_notifications_enabled,
+      currency, tipo_integracion, procesadores,
+      ambiente // <-- recibido del frontend
+    } = JSON.parse(event.body);
+
+    // URLs según el ambiente
+    const CCAPI_URL = ambiente === 'produccion'
+      ? 'https://ccapi.paymentez.com'
+      : 'https://ccapi-stg.paymentez.com';
+
+    const NOCCAPI_URL = ambiente === 'produccion'
+      ? 'https://noccapi.paymentez.com/commons/v1/create-or-update-application/'
+      : 'https://noccapi-stg.paymentez.com/commons/v1/create-or-update-application/';
+
+    // Credenciales según el ambiente
+    const CCAPI_PASSWORD = ambiente === 'produccion'
+      ? process.env.CCAPI_PASSWORD_PROD
+      : process.env.CCAPI_PASSWORD;
+
+    const app_key = ambiente === 'produccion'
+      ? process.env.PAYMENTEZ_APP_KEY_PROD
+      : process.env.PAYMENTEZ_APP_KEY;
+
+    const app_code = ambiente === 'produccion'
+      ? process.env.PAYMENTEZ_APP_CODE
+      : process.env.PAYMENTEZ_APP_CODE;
+
+    // LOGIN CCAPI
+    const LOGIN_URL = `${CCAPI_URL}/v3/user/login/`;
+    const loginRes = await fetch(LOGIN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: process.env.CCAPI_USERNAME,
+        password: CCAPI_PASSWORD
+      })
+    });
+
+    if (!loginRes.ok) {
+      const text = await loginRes.text();
+      return { statusCode: loginRes.status, body: `Login fallido: ${text}` };
+    }
+
+    const { token } = await loginRes.json();
+    const headers = {
+      'Content-Type': 'application/json',
+      Authorization: `Token ${token}`
+    };
+
+    // ... aquí sigue tu código actual pero usando las constantes CCAPI_URL, NOCCAPI_URL, app_key y app_code ya definidas ...
+
 
     let integrations = [];
 
@@ -145,10 +205,10 @@ exports.handler = async (event) => {
     if (serverData) {
       const authRes = await fetch('https://pg-micros.paymentez.com/v1/unixtime/');
       const { unixtime } = await authRes.json();
-
+      /*
       const app_code = process.env.PAYMENTEZ_APP_CODE;
       const app_key = process.env.PAYMENTEZ_APP_KEY;
-
+      */
       const uniq = CryptoJS.SHA256(app_key + unixtime).toString();
       const tokenStr = Buffer.from(`${app_code};${unixtime};${uniq}`).toString('base64');
 
@@ -230,7 +290,7 @@ exports.handler = async (event) => {
 
       console.log('📤 Payload NOCCAPI:', JSON.stringify(noccapiBody, null, 2));
 
-      const noa = await fetch('https://noccapi-stg.paymentez.com/commons/v1/create-or-update-application/', {
+      const noa = await fetch(NOCCAPI_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

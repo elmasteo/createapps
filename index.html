@@ -194,6 +194,8 @@ button:hover {
   </div>
 
   <script>
+
+    /*
 async function init() {
   const clave = await new Promise(resolve => {
   const overlay = document.createElement("div");
@@ -268,7 +270,99 @@ btn.onmouseleave = () => btn.style.backgroundColor = "#4CAF50";
     return;
   }
 
+}*/
+
+async function init() {
+  // Paso 1: pedir clave
+  const clave = await new Promise(resolve => {
+    const overlay = document.createElement("div");
+    overlay.style = `
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.8); display: flex; flex-direction: column;
+      justify-content: center; align-items: center; z-index: 9999;
+    `;
+
+    const input = document.createElement("input");
+    input.type = "password";
+    input.placeholder = "🔒 Ingresa tu clave";
+    input.style.cssText = `
+      padding: 12px 16px; font-size: 16px; border-radius: 6px; border: 1px solid #ccc;
+      margin-bottom: 15px; width: 280px; outline: none;
+    `;
+
+    const btn = document.createElement("button");
+    btn.textContent = "Acceder";
+    btn.style.cssText = `
+      padding: 10px 20px; font-size: 16px; background: #4CAF50; color: white;
+      border: none; border-radius: 6px; cursor: pointer;
+    `;
+    btn.onmouseenter = () => btn.style.backgroundColor = "#45a049";
+    btn.onmouseleave = () => btn.style.backgroundColor = "#4CAF50";
+
+    btn.onclick = () => {
+      document.body.removeChild(overlay);
+      resolve(input.value);
+    };
+
+    overlay.appendChild(input);
+    overlay.appendChild(btn);
+    document.body.appendChild(overlay);
+  });
+
+  // Paso 2: validar clave
+  const res = await fetch('/.netlify/functions/validarClave', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ clave })
+  });
+
+  const { autorizado } = await res.json();
+
+  if (!autorizado) {
+    alert("Clave incorrecta. Acceso denegado.");
+    document.body.innerHTML = "<h2 style='text-align:center; margin-top:20%'>🚫 Acceso no autorizado</h2>";
+    return;
+  }
+
+  // Paso 3: pedir ambiente
+  window.AMBIENTE = await new Promise(resolve => {
+    const overlay = document.createElement("div");
+    overlay.style = `
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.8); display: flex; flex-direction: column;
+      justify-content: center; align-items: center; z-index: 9999;
+    `;
+
+    const select = document.createElement("select");
+    select.style.cssText = `
+      padding: 12px; font-size: 16px; border-radius: 6px; border: 1px solid #ccc;
+      margin-bottom: 15px;
+    `;
+    select.innerHTML = `
+      <option value="sandbox">🌐 Sandbox</option>
+      <option value="produccion">🚀 Producción</option>
+    `;
+
+    const btn = document.createElement("button");
+    btn.textContent = "Confirmar";
+    btn.style.cssText = `
+      padding: 10px 20px; font-size: 16px; background: #007bff; color: white;
+      border: none; border-radius: 6px; cursor: pointer;
+    `;
+    btn.onmouseenter = () => btn.style.backgroundColor = "#0069d9";
+    btn.onmouseleave = () => btn.style.backgroundColor = "#007bff";
+
+    btn.onclick = () => {
+      document.body.removeChild(overlay);
+      resolve(select.value);
+    };
+
+    overlay.appendChild(select);
+    overlay.appendChild(btn);
+    document.body.appendChild(overlay);
+  });
 }
+
 
 init();
 
@@ -411,11 +505,20 @@ function updateAppHeaders() {
       });
 
 
+
+        /*
         const resp = await fetch('/.netlify/functions/crearAppsv2', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
-        });
+        });*/
+        const resp = await fetch('/.netlify/functions/crearAppsv2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...payload, ambiente: window.AMBIENTE }) // Enviamos el ambiente
+      });
+
+        
         const data = await resp.json();
         log.innerHTML += `<div><strong>App ${payload.code}</strong> → <pre>${JSON.stringify(data, null, 2)}</pre></div><hr>`;
       }
