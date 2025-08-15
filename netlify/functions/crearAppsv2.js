@@ -36,6 +36,9 @@ exports.handler = async (event) => {
       Authorization: `Token ${token}`
     };
 */
+const fetch = require('node-fetch');
+const CryptoJS = require('crypto-js');
+
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Método no permitido' };
