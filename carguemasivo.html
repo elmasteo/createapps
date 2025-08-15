@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cargue Masivo de Apps</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    input[type="file"] { margin-bottom: 10px; }
+    #log { 
+      margin-top: 20px; 
+      padding: 10px; 
+      background: #f9f9f9; 
+      border: 1px solid #ccc; 
+      height: 200px; 
+      overflow-y: auto; 
+      font-size: 14px;
+    }
+    .ok { color: green; }
+    .error { color: red; }
+    .tab-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 20px 0;
+      display: flex;
+      gap: 12px;
+      border-bottom: 2px solid #dee2e6;
+      max-width: 960px;
+      width: 100%;
+    }
+
+    ul li a {
+      display: inline-block;
+      padding: 10px 18px;
+      border-radius: 8px 8px 0 0;
+      text-decoration: none;
+      color: #495057;
+      background: #f1f3f5;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    ul li a:hover {
+      background: #e9ecef;
+      color: #212529;
+    }
+
+    ul li a.active {
+      background: #081f2c;
+      color: #fff;
+    }
+    .download-btn {
+      display: inline-block;
+      background-color: #081f2c;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 15px;
+      margin-top: 16px;
+      transition: background 0.2s;
+    }
+
+    .download-btn:hover {
+      background-color: #175b81;
+    }
+
+  </style>
+</head>
+<body>
+
+  <h2>Cargue Masivo de Apps desde Excel</h2>
+   <div class="tab-wrapper">
+    <ul>
+      <li><a class="index" href="index.html">Single</a></li>
+      <li><a class="massive" href="carguemasivo.html">Massive</a></li>
+    </ul>
+  </div>
+  <a href="formatomasivo.xlsx" download class="download-btn">Download format</a>
+  <input type="file" id="excelFile" accept=".xlsx, .xls" />
+  <button id="sendData">Enviar Datos al Backend</button>
+
+  <div id="log"></div>
+
+  <script>
+  const path = window.location.pathname.replace('/', '').replace('.html', '') || 'index';
+
+  document.querySelectorAll('ul li a').forEach(link => {
+    if (link.classList.contains(path)) {
+      link.classList.add('active');
+    }
+  });
+</script>
+
+  <script>
+
+    let excelData = [];
+
+    document.getElementById("excelFile").addEventListener("change", handleFile);
+
+    function handleFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+
+        excelData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+        logMessage(`Archivo cargado: ${file.name} - ${excelData.length} registros`, "ok");
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    document.getElementById("sendData").addEventListener("click", async () => {
+      if (excelData.length === 0) {
+        logMessage("No hay datos cargados desde Excel", "error");
+        return;
+      }
+
+      for (let i = 0; i < excelData.length; i++) {
+        const row = excelData[i];
+        try {
+          const res = await fetch("/.netlify/functions/crearAppv2", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(row)
+          });
+
+          if (!res.ok) throw new Error(await res.text());
+
+          const json = await res.json();
+          logMessage(`Fila ${i + 1}: Enviado correctamente - AppCode: ${json.appCode || 'N/A'}`, "ok");
+        } catch (err) {
+          logMessage(`Fila ${i + 1}: Error - ${err.message}`, "error");
+        }
+      }
+    });
+
+    function logMessage(msg, type) {
+      const logDiv = document.getElementById("log");
+      const p = document.createElement("p");
+      p.className = type;
+      p.textContent = msg;
+      logDiv.appendChild(p);
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+  </script>
+
+</body>
+</html>

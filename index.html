@@ -168,6 +168,44 @@ button:hover {
   }
 }
 
+.tab-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 20px 0;
+      display: flex;
+      gap: 12px;
+      border-bottom: 2px solid #dee2e6;
+      max-width: 960px;
+      width: 100%;
+    }
+
+    ul li a {
+      display: inline-block;
+      padding: 10px 18px;
+      border-radius: 8px 8px 0 0;
+      text-decoration: none;
+      color: #495057;
+      background: #f1f3f5;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    ul li a:hover {
+      background: #e9ecef;
+      color: #212529;
+    }
+
+    ul li a.active {
+      background: #081f2c;
+      color: #fff;
+    }
+
   </style>
 </head>
 <body>
@@ -175,6 +213,13 @@ button:hover {
     <div class="logo-wrapper">
       <img src="https://cdn.paymentez.com/img/nv/nuvei_logo.png" alt="Nuvei Logo">
     </div>
+
+  <div class="tab-wrapper">
+    <ul>
+      <li><a class="index" href="index.html">Single</a></li>
+      <li><a class="massive" href="carguemasivo.html">Massive</a></li>
+    </ul>
+  </div>
 
     <div class="container">
       <!-- Panel izquierdo: Formularios -->
@@ -194,83 +239,16 @@ button:hover {
   </div>
 
   <script>
+  const path = window.location.pathname.replace('/', '').replace('.html', '') || 'index';
 
-    /*
-async function init() {
-  const clave = await new Promise(resolve => {
-  const overlay = document.createElement("div");
-  overlay.style.position = "fixed";
-  overlay.style.top = 0;
-  overlay.style.left = 0;
-  overlay.style.width = "100vw";
-  overlay.style.height = "100vh";
-  overlay.style.background = "rgba(0,0,0,0.8)";
-  overlay.style.display = "flex";
-  overlay.style.flexDirection = "column";
-  overlay.style.justifyContent = "center";
-  overlay.style.alignItems = "center";
-  overlay.style.zIndex = 9999;
-
-  const input = document.createElement("input");
-  input.type = "password";
-  input.placeholder = "🔒 Ingresa tu clave";
-  input.style.padding = "12px 16px";
-  input.style.fontSize = "16px";
-  input.style.borderRadius = "6px";
-  input.style.border = "1px solid #ccc";
-  input.style.marginBottom = "15px";
-  input.style.width = "280px";
-  input.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
-  input.style.outline = "none";
-
-  const btn = document.createElement("button");
-  btn.textContent = "Acceder";
-  btn.style.padding = "10px 20px";
-  btn.style.fontSize = "16px";
-  btn.style.border = "none";
-  btn.style.borderRadius = "5px";
-  btn.style.cursor = "pointer";
-  btn.style.backgroundColor = "#4CAF50";
-  btn.style.color = "white";
-  btn.style.padding = "10px 24px";
-  btn.style.fontSize = "16px";
-  btn.style.border = "none";
-  btn.style.borderRadius = "6px";
-  btn.style.cursor = "pointer";
-  btn.style.boxShadow = "0 2px 6px rgba(0,0,0,0.2)";
-  btn.style.transition = "background 0.3s";
-
-btn.onmouseenter = () => btn.style.backgroundColor = "#45a049";
-btn.onmouseleave = () => btn.style.backgroundColor = "#4CAF50";
-
-
-  btn.onclick = () => {
-    const val = input.value;
-    document.body.removeChild(overlay);
-    resolve(val);
-  };
-
-  overlay.appendChild(input);
-  overlay.appendChild(btn);
-  document.body.appendChild(overlay);
-});
-
-
-  const res = await fetch('/.netlify/functions/validarClave', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ clave })
+  document.querySelectorAll('ul li a').forEach(link => {
+    if (link.classList.contains(path)) {
+      link.classList.add('active');
+    }
   });
+</script>
 
-  const { autorizado } = await res.json();
-
-  if (!autorizado) {
-    alert("Clave incorrecta. Acceso denegado.");
-    document.body.innerHTML = "<h2 style='text-align:center; margin-top:20%'>🚫 Acceso no autorizado</h2>";
-    return;
-  }
-
-}*/
+  <script>
 
 async function init() {
   // Paso 1: pedir clave
@@ -504,14 +482,6 @@ function updateAppHeaders() {
         });
       });
 
-
-
-        /*
-        const resp = await fetch('/.netlify/functions/crearAppsv2', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });*/
         const resp = await fetch('/.netlify/functions/crearAppsv2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
