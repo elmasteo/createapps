@@ -13,7 +13,8 @@
     "universal-user-agent": "^6.0.1",
     "webidl-conversions": "^3.0.1",
     "whatwg-url": "^5.0.0",
-    "wrappy": "^1.0.2"
+    "wrappy": "^1.0.2",
+    "xlsx": "^0.18.5"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
