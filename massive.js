@@ -76,18 +76,24 @@ document.getElementById("sendData").addEventListener("click", async () => {
   for (let i = 0; i < excelData.length; i++) {
     const row = excelData[i];
 
+    // ✅ Validar antes de enviar
+    if (!row["code"] || !row["owner_name"]) {
+      logMessage(`Fila ${i + 1}: Omitida (faltan campos obligatorios: code / owner_name)`, "error");
+      continue;
+    }
+
     // 🚀 Armar payload como espera el backend
     const payload = {
-      name: row["Nombre"] || "",
-      code: row["Código"] || "",
-      owner_name: row["Cliente"] || "",
-      callback_url: row["Callback"] || "",
+      name: row["owner_name"] || "",
+      code: row["code"] || "",
+      owner_name: row["owner_name"] || "",
+      callback_url: row["callback_url"] || "",
       use_ccapi_announce: true,
       http_notifications_enabled: true,
-      currency: "COP",
-      tipo_integracion: row["Tipo Integración"] || "SERVER/CLIENT",
+      currency: row["currency"] || "",
+      tipo_integracion: row["tipo_integracion"] || "SERVER/CLIENT",
       procesadores: buildProcesadores(row),
-      ambiente: row["Ambiente"] || "stg" // opcional: o podrías poner un select en el HTML
+      ambiente: row["ambiente"] || "stg" // opcional: o podrías poner un select en el HTML
     };
 
     try {
