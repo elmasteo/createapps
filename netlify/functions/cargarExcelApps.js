@@ -121,7 +121,7 @@ exports.handler = async (event) => {
 
       try {
         const payload = {
-          name: row.name,
+          name: row.owner_name,
           code: row.code,
           owner_name: row.owner_name,
           callback_url: row.callback_url,

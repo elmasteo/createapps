@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Generador de Apps</title>
+  <title>Generate Apps</title>
   <link rel="icon" href="https://docs.nuvei.com/wp-content/themes/manual-child/img/favicons/cropped-favicon-nuvei-32x32.png" sizes="32x32">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -36,10 +36,10 @@
       <!-- Cargue Individual -->
       <section id="single" class="active">
         <div class="form-section">
-          <h1>Generador de Apps</h1>
+          <h1>Generate apps</h1>
           <div id="apps"></div>
-          <button onclick="addApp()">+ Agregar App</button>
-          <button onclick="enviarApps()">Enviar Todo</button>
+          <button onclick="addApp()">+ Add App</button>
+          <button onclick="enviarApps()">Submit</button>
         </div>
         <div class="log-section">
           <h2>Logs</h2>
@@ -49,11 +49,14 @@
 
       <!-- Cargue Masivo -->
       <section id="massive">
-        <h2>Cargue Masivo de Apps desde Excel</h2>
+        <h2>Massive from excel file</h2>
         <a href="formatomasivo.xlsx" download class="download-btn">Download format</a>
         <input type="file" id="excelFile" accept=".xlsx, .xls" />
-        <button id="sendData">Enviar Datos al Backend</button>
-        <div id="logMassive" class="log"></div>
+        <button id="sendData">Submit</button>
+        <div class="log-section">
+          <h2>Logs</h2>
+          <div id="log" class="log"></div>
+        </div>
       </section>
 
     </div>
