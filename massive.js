@@ -179,19 +179,14 @@ document.getElementById("sendData").addEventListener("click", async () => {
 
       // ✅ Recorremos todos los resultados
       json.results.forEach(r => {
-        if (typeof r.response === "object" && r.response.code) {
-          // Caso con objeto que contiene code y posiblemente key
+        if (typeof r.response === "object" && r.response.code && r.response.key) {
+          // Solo incluimos los que traen key real
           resultados.push({
             AppCode: r.response.code,
-            AppKey: r.response.key || ""
-          });
-        } else if (typeof r.response === "string" && r.integrationCode) {
-          // Caso solo mensaje (ej: PSE enviado solo a NOCCAPI)
-          resultados.push({
-            AppCode: r.integrationCode,
-            AppKey: ""
+            AppKey: r.response.key
           });
         }
+        // 🔴 Ya no agregamos los casos sin key (strings o vacíos)
       });
 
       // ✅ Loguear la respuesta COMPLETA
