@@ -177,23 +177,30 @@ document.getElementById("sendData").addEventListener("click", async () => {
 
       const json = await res.json();
 
-      // ✅ Guardamos AppCode y AppKeys en resultados
-      const appCode = json?.results?.[0]?.response?.code || "N/A";
-      resultados.push({ AppCode: appCode, AppKey: "" });
+      // ✅ Recorremos todos los resultados
+      json.results.forEach(r => {
+        if (typeof r.response === "object" && r.response.code) {
+          // Caso con objeto que contiene code y posiblemente key
+          resultados.push({
+            AppCode: r.response.code,
+            AppKey: r.response.key || ""
+          });
+        } else if (typeof r.response === "string" && r.integrationCode) {
+          // Caso solo mensaje (ej: PSE enviado solo a NOCCAPI)
+          resultados.push({
+            AppCode: r.integrationCode,
+            AppKey: ""
+          });
+        }
+      });
 
-      if (payload.tipo_integracion === "SERVER/CLIENT") {
-        const creds = json?.results?.[0]?.response?.credentials || [];
-        creds.forEach((cred) => {
-          resultados.push({ AppCode: appCode, AppKey: cred.key || "" });
-        });
-      }
-
-      // ✅ Loguear la respuesta COMPLETA, bien formateada
+      // ✅ Loguear la respuesta COMPLETA
       logMessage(
         `✅ Fila ${i + 1}: Enviado correctamente\n` +
           `🟢 Respuesta completa:\n${JSON.stringify(json, null, 2)}`,
         "ok"
       );
+
     } catch (err) {
       logMessage(
         `❌ Fila ${i + 1}: Error al enviar\n` +
