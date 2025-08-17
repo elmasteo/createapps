@@ -1,6 +1,3 @@
-// massive.js
-// Requiere que procesadores.js esté cargado ANTES para usar window.procesadoresConfig
-
 let excelData = [];
 
 document.getElementById("excelFile").addEventListener("change", handleFile);
@@ -19,7 +16,7 @@ function handleFile(event) {
     excelData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
 
     logMessage(
-      `Archivo cargado: ${file.name} - ${excelData.length} registros`,
+      `Archivo cargado: ${file.name}`,
       "ok"
     );
   };
@@ -175,12 +172,11 @@ document.getElementById("sendData").addEventListener("click", async () => {
       if (!res.ok) throw new Error(await res.text());
 
       const json = await res.json();
-      const firstResultCode =
-        json?.results?.find((r) => r?.response?.code)?.response?.code || "N/A";
 
+      // ✅ Loguear la respuesta COMPLETA, bien formateada
       logMessage(
         `✅ Fila ${i + 1}: Enviado correctamente\n` +
-          `🟢 Respuesta AppCode: ${firstResultCode}`,
+          `🟢 Respuesta completa:\n${JSON.stringify(json, null, 2)}`,
         "ok"
       );
     } catch (err) {
@@ -195,7 +191,7 @@ document.getElementById("sendData").addEventListener("click", async () => {
 
 function logMessage(msg, type) {
   const logDiv = document.getElementById("logmassive");
-  const pre = document.createElement("pre"); // usar <pre> para mejor formato multilínea
+  const pre = document.createElement("pre"); // usar <pre> para formato multilínea
   pre.className = type;
   pre.textContent = msg;
   logDiv.appendChild(pre);
