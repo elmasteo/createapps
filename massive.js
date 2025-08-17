@@ -32,7 +32,6 @@ function hasAny(row, keys) {
 
 function deepClone(obj) {
   try {
-    // para navegadores modernos
     return typeof structuredClone === "function"
       ? structuredClone(obj)
       : JSON.parse(JSON.stringify(obj));
@@ -48,20 +47,17 @@ function mergeFixed(tipo, visibles) {
 
   const campos = { ...visibles };
 
-  // Mezclar fijos del procesador
   if (cfg.fijos) {
     Object.assign(campos, deepClone(cfg.fijos));
   }
 
-  // Si usa NOCCAPI (p.ej. PSE), agregar marca para el backend
   if (cfg.usa_noccapi) {
-    // En tu backend se valida carrier_noccapi === 'PSE'
     campos.carrier_noccapi = cfg.carrier; // "PSE"
   }
 
   return {
-    carrier: cfg.carrier, // "67", "27", "34" o "PSE"
-    tipo,                 // "CBCO", "RB", "PR", "PSE"
+    carrier: cfg.carrier,
+    tipo,
     campos,
   };
 }
@@ -69,7 +65,6 @@ function mergeFixed(tipo, visibles) {
 function buildProcesadores(row) {
   const procs = [];
 
-  // --- CBCO ---
   if (hasAny(row, ["CBCO_cb_commerce_id", "CBCO_cb_terminal_code"])) {
     procs.push(
       mergeFixed("CBCO", {
@@ -79,7 +74,6 @@ function buildProcesadores(row) {
     );
   }
 
-  // --- RB ---
   if (hasAny(row, ["RB_rb_idAdquiriente", "RB_rb_idTerminal"])) {
     procs.push(
       mergeFixed("RB", {
@@ -89,7 +83,6 @@ function buildProcesadores(row) {
     );
   }
 
-  // --- PR (opcional si tienes columnas para PR) ---
   if (
     hasAny(row, [
       "PR_pr_retailer_id",
@@ -110,7 +103,6 @@ function buildProcesadores(row) {
     );
   }
 
-  // --- PSE ---
   if (
     hasAny(row, [
       "PSE_commerce_id",
@@ -135,7 +127,6 @@ function buildProcesadores(row) {
     );
   }
 
-  // limpiar nulos si faltó config
   return procs.filter(Boolean);
 }
 
@@ -147,40 +138,31 @@ document.getElementById("sendData").addEventListener("click", async () => {
 
   for (let i = 0; i < excelData.length; i++) {
     const row = excelData[i];
-
-    // ✅ Validar antes de enviar
     const code = (row["code"] || "").toString().trim();
     const ownerName = (row["owner_name"] || "").toString().trim();
 
     if (!code || !ownerName) {
-      logMessage(
-        `Fila ${i + 1}: Omitida (faltan campos obligatorios: code / owner_name)`,
-        "error"
-      );
+      // 🚫 Omitir en silencio
       continue;
     }
 
     const procesadores = buildProcesadores(row);
     if (procesadores.length === 0) {
-      logMessage(
-        `Fila ${i + 1}: Omitida (sin procesadores válidos)`,
-        "error"
-      );
+      // 🚫 Omitir en silencio
       continue;
     }
 
-    // 🚀 Armar payload como espera el backend
     const payload = {
-      name: row["owner_name"] || "",
-      code: row["code"] || "",
-      owner_name: row["owner_name"] || "",
+      name: ownerName,
+      code,
+      owner_name: ownerName,
       callback_url: row["callback_url"] || "",
       use_ccapi_announce: true,
       http_notifications_enabled: true,
       currency: row["currency"] || "",
       tipo_integracion: row["tipo_integracion"] || "SERVER/CLIENT",
-      procesadores: buildProcesadores(row),
-      ambiente: row["ambiente"] || "stg" // opcional: o podrías poner un select en el HTML
+      procesadores,
+      ambiente: row["ambiente"] || "stg",
     };
 
     try {
@@ -193,25 +175,29 @@ document.getElementById("sendData").addEventListener("click", async () => {
       if (!res.ok) throw new Error(await res.text());
 
       const json = await res.json();
-      // Toma el primer code de respuesta si hay varios (SERVER/CLIENT)
       const firstResultCode =
         json?.results?.find((r) => r?.response?.code)?.response?.code || "N/A";
 
       logMessage(
-        `Fila ${i + 1}: Enviado correctamente - AppCode: ${firstResultCode}`,
+        `✅ Fila ${i + 1}: Enviado correctamente\n` +
+          `🟢 Respuesta AppCode: ${firstResultCode}`,
         "ok"
       );
     } catch (err) {
-      logMessage(`Fila ${i + 1}: Error - ${err.message}`, "error");
+      logMessage(
+        `❌ Fila ${i + 1}: Error al enviar\n` +
+          `🔴 Error: ${err.message}`,
+        "error"
+      );
     }
   }
 });
 
 function logMessage(msg, type) {
   const logDiv = document.getElementById("logmassive");
-  const p = document.createElement("p");
-  p.className = type;
-  p.textContent = msg;
-  logDiv.appendChild(p);
+  const pre = document.createElement("pre"); // usar <pre> para mejor formato multilínea
+  pre.className = type;
+  pre.textContent = msg;
+  logDiv.appendChild(pre);
   logDiv.scrollTop = logDiv.scrollHeight;
 }
