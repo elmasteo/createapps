@@ -15,8 +15,9 @@ function handleFile(event) {
 
     excelData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
 
+    const registrosValidos = excelData.filter(row => row.code && row.owner);
     logMessage(
-      `Archivo cargado: ${file.name}`,
+      `Archivo cargado: ${file.name} - ${registrosValidos.length} registros válidos`,
       "ok"
     );
   };
