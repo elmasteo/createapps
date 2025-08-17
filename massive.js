@@ -1,4 +1,5 @@
 let excelData = [];
+let resultados = [];
 
 document.getElementById("excelFile").addEventListener("change", handleFile);
 
@@ -134,6 +135,8 @@ document.getElementById("sendData").addEventListener("click", async () => {
     return;
   }
 
+  resultados = [];
+
   for (let i = 0; i < excelData.length; i++) {
     const row = excelData[i];
     const code = (row["code"] || "").toString().trim();
@@ -174,6 +177,17 @@ document.getElementById("sendData").addEventListener("click", async () => {
 
       const json = await res.json();
 
+      // ✅ Guardamos AppCode y AppKeys en resultados
+      const appCode = json?.results?.[0]?.response?.code || "N/A";
+      resultados.push({ AppCode: appCode, AppKey: "" });
+
+      if (payload.tipo_integracion === "SERVER/CLIENT") {
+        const creds = json?.results?.[0]?.response?.credentials || [];
+        creds.forEach((cred) => {
+          resultados.push({ AppCode: appCode, AppKey: cred.key || "" });
+        });
+      }
+
       // ✅ Loguear la respuesta COMPLETA, bien formateada
       logMessage(
         `✅ Fila ${i + 1}: Enviado correctamente\n` +
@@ -187,6 +201,14 @@ document.getElementById("sendData").addEventListener("click", async () => {
         "error"
       );
     }
+  }
+  if (resultados.length > 0) {
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(resultados);
+    XLSX.utils.book_append_sheet(wb, ws, "Resultados");
+    XLSX.writeFile(wb, "resultados_appcodes.xlsx");
+
+    logMessage("📂 Archivo resultados_appcodes.xlsx generado", "ok");
   }
 });
 
