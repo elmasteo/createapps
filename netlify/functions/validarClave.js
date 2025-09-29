@@ -3,7 +3,7 @@ exports.handler = async (event) => {
 
   const CLAVES_VALIDAS = [
   process.env.CLAVE_SANTIAGO,
-  process.env.CLAVE_GERMAN,
+  process.env.CLAVE_GERMAN
 ]; 
 
   const accesoPermitido = CLAVES_VALIDAS.includes(clave);
