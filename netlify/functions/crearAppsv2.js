@@ -71,6 +71,7 @@ exports.handler = async (event) => {
       ? process.env.PAYMENTEZ_APP_CODE
       : process.env.PAYMENTEZ_APP_CODE;
 
+/*
     let CCAPI_USERNAME, CCAPI_PASSWORD;
 
     if (clave === process.env.CLAVE_SANTIAGO) {
@@ -87,11 +88,13 @@ exports.handler = async (event) => {
       return { statusCode: 403, body: 'Clave no autorizada' };
     }
 
-    /*
+    */
+
+ 
     const CCAPI_PASSWORD = ambiente === 'produccion'
       ? process.env.CCAPI_PASSWORD_PROD
       : process.env.CCAPI_PASSWORD;
-  */
+  /*
     const LOGIN_URL = `${CCAPI_URL}/v3/user/login/`;
     const loginRes = await fetch(LOGIN_URL, {
       method: 'POST',
@@ -101,8 +104,8 @@ exports.handler = async (event) => {
         password: CCAPI_PASSWORD
       })
     });
-
-    /*
+*/
+    
     const LOGIN_URL = `${CCAPI_URL}/v3/user/login/`;
     const loginRes = await fetch(LOGIN_URL, {
       method: 'POST',
@@ -112,7 +115,7 @@ exports.handler = async (event) => {
         password: CCAPI_PASSWORD
       })
     });
-    */
+    
     if (!loginRes.ok) {
       const text = await loginRes.text();
       return { statusCode: loginRes.status, body: `Login fallido: ${text}` };
