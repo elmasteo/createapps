@@ -49,7 +49,7 @@ exports.handler = async (event) => {
       name, code, owner_name, callback_url,
       use_ccapi_announce, http_notifications_enabled,
       currency, tipo_integracion, procesadores,
-      ambiente // <-- recibido del frontend
+      ambiente, clave // <-- recibido del frontend
     } = JSON.parse(event.body);
 
     // URLs según el ambiente
@@ -62,9 +62,6 @@ exports.handler = async (event) => {
       : 'https://noccapi-stg.paymentez.com/commons/v1/create-or-update-application/';
 
     // Credenciales según el ambiente
-    const CCAPI_PASSWORD = ambiente === 'produccion'
-      ? process.env.CCAPI_PASSWORD_PROD
-      : process.env.CCAPI_PASSWORD;
 
     const app_key = ambiente === 'produccion'
       ? process.env.PAYMENTEZ_APP_KEY_PROD
@@ -74,7 +71,38 @@ exports.handler = async (event) => {
       ? process.env.PAYMENTEZ_APP_CODE
       : process.env.PAYMENTEZ_APP_CODE;
 
-    // LOGIN CCAPI
+    let CCAPI_USERNAME, CCAPI_PASSWORD;
+
+    if (clave === process.env.CLAVE_SANTIAGO) {
+      CCAPI_USERNAME = process.env.CCAPI_USERNAME;
+      CCAPI_PASSWORD = ambiente === 'produccion'
+        ? process.env.CCAPI_PASSWORD_PROD
+        : process.env.CCAPI_PASSWORD;
+    } else if (clave === process.env.CLAVE_GERMAN) {
+      CCAPI_USERNAME = process.env.CCAPI_USERNAME_GERMAN;
+      CCAPI_PASSWORD = ambiente === 'produccion'
+        ? process.env.CCAPI_PASSWORD_GERMAN_PROD
+        : process.env.CCAPI_PASSWORD_GERMAN;
+    } else {
+      return { statusCode: 403, body: 'Clave no autorizada' };
+    }
+
+    /*
+    const CCAPI_PASSWORD = ambiente === 'produccion'
+      ? process.env.CCAPI_PASSWORD_PROD
+      : process.env.CCAPI_PASSWORD;
+  */
+    const LOGIN_URL = `${CCAPI_URL}/v3/user/login/`;
+    const loginRes = await fetch(LOGIN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: CCAPI_USERNAME,
+        password: CCAPI_PASSWORD
+      })
+    });
+
+    /*
     const LOGIN_URL = `${CCAPI_URL}/v3/user/login/`;
     const loginRes = await fetch(LOGIN_URL, {
       method: 'POST',
@@ -84,7 +112,7 @@ exports.handler = async (event) => {
         password: CCAPI_PASSWORD
       })
     });
-
+    */
     if (!loginRes.ok) {
       const text = await loginRes.text();
       return { statusCode: loginRes.status, body: `Login fallido: ${text}` };
