@@ -49,7 +49,7 @@ exports.handler = async (event) => {
       name, code, owner_name, callback_url,
       use_ccapi_announce, http_notifications_enabled,
       currency, tipo_integracion, procesadores,
-      ambiente, clave // <-- recibido del frontend
+      ambiente // <-- recibido del frontend
     } = JSON.parse(event.body);
 
     // URLs según el ambiente
@@ -61,24 +61,8 @@ exports.handler = async (event) => {
       ? 'https://noccapi.paymentez.com/commons/v1/create-or-update-application/'
       : 'https://noccapi-stg.paymentez.com/commons/v1/create-or-update-application/';
 
-    // Credenciales según la clave
-    let CCAPI_USERNAME, CCAPI_PASSWORD;
+    // Credenciales según el ambiente
 
-    if (clave?.trim() === process.env.CLAVE_SANTIAGO?.trim()) {
-      CCAPI_USERNAME = process.env.CCAPI_USERNAME;
-      CCAPI_PASSWORD = ambiente === 'produccion'
-        ? process.env.CCAPI_PASSWORD_PROD
-        : process.env.CCAPI_PASSWORD;
-    } else if (clave?.trim() === process.env.CLAVE_GERMAN?.trim()) {
-      CCAPI_USERNAME = process.env.CCAPI_USERNAME_GERMAN;
-      CCAPI_PASSWORD = ambiente === 'produccion'
-        ? process.env.CCAPI_PASSWORD_GERMAN_PROD
-        : process.env.CCAPI_PASSWORD_GERMAN;
-    } else {
-      return { statusCode: 403, body: 'Clave no autorizada' };
-    }
-
-    // App key/code
     const app_key = ambiente === 'produccion'
       ? process.env.PAYMENTEZ_APP_KEY_PROD
       : process.env.PAYMENTEZ_APP_KEY;
@@ -87,7 +71,30 @@ exports.handler = async (event) => {
       ? process.env.PAYMENTEZ_APP_CODE
       : process.env.PAYMENTEZ_APP_CODE;
 
-    // Login
+/*
+    let CCAPI_USERNAME, CCAPI_PASSWORD;
+
+    if (clave === process.env.CLAVE_SANTIAGO) {
+      CCAPI_USERNAME = process.env.CCAPI_USERNAME;
+      CCAPI_PASSWORD = ambiente === 'produccion'
+        ? process.env.CCAPI_PASSWORD_PROD
+        : process.env.CCAPI_PASSWORD;
+    } else if (clave === process.env.CLAVE_GERMAN) {
+      CCAPI_USERNAME = process.env.CCAPI_USERNAME_GERMAN;
+      CCAPI_PASSWORD = ambiente === 'produccion'
+        ? process.env.CCAPI_PASSWORD_GERMAN_PROD
+        : process.env.CCAPI_PASSWORD_GERMAN;
+    } else {
+      return { statusCode: 403, body: 'Clave no autorizada' };
+    }
+
+    */
+
+ 
+    const CCAPI_PASSWORD = ambiente === 'produccion'
+      ? process.env.CCAPI_PASSWORD_PROD
+      : process.env.CCAPI_PASSWORD;
+  /*
     const LOGIN_URL = `${CCAPI_URL}/v3/user/login/`;
     const loginRes = await fetch(LOGIN_URL, {
       method: 'POST',
@@ -97,7 +104,8 @@ exports.handler = async (event) => {
         password: CCAPI_PASSWORD
       })
     });
-/*
+*/
+    
     const LOGIN_URL = `${CCAPI_URL}/v3/user/login/`;
     const loginRes = await fetch(LOGIN_URL, {
       method: 'POST',
@@ -107,7 +115,7 @@ exports.handler = async (event) => {
         password: CCAPI_PASSWORD
       })
     });
-  */  
+    
     if (!loginRes.ok) {
       const text = await loginRes.text();
       return { statusCode: loginRes.status, body: `Login fallido: ${text}` };
