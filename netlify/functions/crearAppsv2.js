@@ -64,12 +64,12 @@ exports.handler = async (event) => {
     // Credenciales según la clave
     let CCAPI_USERNAME, CCAPI_PASSWORD;
 
-    if (clave === process.env.CLAVE_SANTIAGO) {
+    if (clave?.trim() === process.env.CLAVE_SANTIAGO?.trim()) {
       CCAPI_USERNAME = process.env.CCAPI_USERNAME;
       CCAPI_PASSWORD = ambiente === 'produccion'
         ? process.env.CCAPI_PASSWORD_PROD
         : process.env.CCAPI_PASSWORD;
-    } else if (clave === process.env.CLAVE_GERMAN) {
+    } else if (clave?.trim() === process.env.CLAVE_GERMAN?.trim()) {
       CCAPI_USERNAME = process.env.CCAPI_USERNAME_GERMAN;
       CCAPI_PASSWORD = ambiente === 'produccion'
         ? process.env.CCAPI_PASSWORD_GERMAN_PROD
