@@ -63,16 +63,7 @@ exports.handler = async (event) => {
 
     // Credenciales según el ambiente
 
-    const app_key = ambiente === 'produccion'
-      ? process.env.PAYMENTEZ_APP_KEY_PROD
-      : process.env.PAYMENTEZ_APP_KEY;
-
-    const app_code = ambiente === 'produccion'
-      ? process.env.PAYMENTEZ_APP_CODE
-      : process.env.PAYMENTEZ_APP_CODE;
-
-/*
-    let CCAPI_USERNAME, CCAPI_PASSWORD;
+      let CCAPI_USERNAME, CCAPI_PASSWORD;
 
     if (clave === process.env.CLAVE_SANTIAGO) {
       CCAPI_USERNAME = process.env.CCAPI_USERNAME;
@@ -88,15 +79,18 @@ exports.handler = async (event) => {
       return { statusCode: 403, body: 'Clave no autorizada' };
     }
 
-    //testing testing
+    const app_key = ambiente === 'produccion'
+      ? process.env.PAYMENTEZ_APP_KEY_PROD
+      : process.env.PAYMENTEZ_APP_KEY;
 
-    */
+    const app_code = ambiente === 'produccion'
+      ? process.env.PAYMENTEZ_APP_CODE
+      : process.env.PAYMENTEZ_APP_CODE;
 
- 
     const CCAPI_PASSWORD = ambiente === 'produccion'
       ? process.env.CCAPI_PASSWORD_PROD
       : process.env.CCAPI_PASSWORD;
-  /*
+ 
     const LOGIN_URL = `${CCAPI_URL}/v3/user/login/`;
     const loginRes = await fetch(LOGIN_URL, {
       method: 'POST',
@@ -106,8 +100,7 @@ exports.handler = async (event) => {
         password: CCAPI_PASSWORD
       })
     });
-*/
-    
+/*
     const LOGIN_URL = `${CCAPI_URL}/v3/user/login/`;
     const loginRes = await fetch(LOGIN_URL, {
       method: 'POST',
@@ -117,7 +110,7 @@ exports.handler = async (event) => {
         password: CCAPI_PASSWORD
       })
     });
-    
+  */  
     if (!loginRes.ok) {
       const text = await loginRes.text();
       return { statusCode: loginRes.status, body: `Login fallido: ${text}` };
