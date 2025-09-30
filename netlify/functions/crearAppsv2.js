@@ -61,9 +61,8 @@ exports.handler = async (event) => {
       ? 'https://noccapi.paymentez.com/commons/v1/create-or-update-application/'
       : 'https://noccapi-stg.paymentez.com/commons/v1/create-or-update-application/';
 
-    // Credenciales según el ambiente
-
-      let CCAPI_USERNAME, CCAPI_PASSWORD;
+    // Credenciales según la clave
+    let CCAPI_USERNAME, CCAPI_PASSWORD;
 
     if (clave === process.env.CLAVE_SANTIAGO) {
       CCAPI_USERNAME = process.env.CCAPI_USERNAME;
@@ -79,6 +78,7 @@ exports.handler = async (event) => {
       return { statusCode: 403, body: 'Clave no autorizada' };
     }
 
+    // App key/code
     const app_key = ambiente === 'produccion'
       ? process.env.PAYMENTEZ_APP_KEY_PROD
       : process.env.PAYMENTEZ_APP_KEY;
@@ -87,10 +87,7 @@ exports.handler = async (event) => {
       ? process.env.PAYMENTEZ_APP_CODE
       : process.env.PAYMENTEZ_APP_CODE;
 
-    const CCAPI_PASSWORD = ambiente === 'produccion'
-      ? process.env.CCAPI_PASSWORD_PROD
-      : process.env.CCAPI_PASSWORD;
- 
+    // Login
     const LOGIN_URL = `${CCAPI_URL}/v3/user/login/`;
     const loginRes = await fetch(LOGIN_URL, {
       method: 'POST',
